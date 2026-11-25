@@ -1,0 +1,12 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: config/Dockerfile
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - leaderboard:/app/data
+
+volumes:
+  leaderboard:

@@ -1,0 +1,64 @@
+@import "tailwindcss" source(".");
+@import "@heroui/styles/base" layer(base);
+@import "@heroui/styles/themes/default";
+@import "@heroui/styles/utilities";
+@import "@heroui/styles/variants";
+@import "@heroui/styles/components/alert.css" layer(components);
+@import "@heroui/styles/components/button.css" layer(components);
+@import "@heroui/styles/components/card.css" layer(components);
+@import "@heroui/styles/components/input.css" layer(components);
+@import "@heroui/styles/components/kbd.css" layer(components);
+@import "@heroui/styles/components/label.css" layer(components);
+@import "@heroui/styles/components/list-box-item.css" layer(components);
+@import "@heroui/styles/components/list-box.css" layer(components);
+@import "@heroui/styles/components/select.css" layer(components);
+@import "@heroui/styles/components/textfield.css" layer(components);
+
+@theme {
+  --font-sans: system-ui, sans-serif;
+}
+
+@layer base {
+  [data-theme="dark"] {
+    --background: #111015;
+    --foreground: #f7f4f5;
+    --muted: #b5adb8;
+    --surface: #1b191f;
+    --overlay: #25222b;
+    --border: #38333d;
+    --field-background: #131217;
+    --accent: #ff5969;
+    --accent-foreground: #1c1014;
+    --danger: #ff9fa9;
+    --focus: #ff9ba5;
+  }
+
+  html {
+    @apply bg-background text-foreground scheme-dark;
+    line-height: normal;
+  }
+
+  body {
+    @apply min-h-screen min-w-[280px];
+  }
+
+  a {
+    @apply underline underline-offset-4;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-4 outline-focus;
+  }
+
+  h1 {
+    @apply mb-[0.67em] text-[clamp(2rem,5vw,3.5rem)] leading-none font-bold tracking-[-0.045em];
+  }
+
+  h2 {
+    @apply mb-4 text-[1rem] font-bold;
+  }
+
+  p {
+    @apply mb-[1em];
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "extends": "../config/tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@game-core/*": ["../game-core/*"]
+    }
+  },
+  "include": ["src", "tests", "vite.config.ts"]
+}
