@@ -128,9 +128,9 @@ test('keeps a duplicate name on the join form and allows a different name', asyn
 });
 
 test('fits the playing field, keeps its focus unobtrusive, and copies via the icon', async ({ page, context }, info) => {
-  const room = 'Compact Room ' + info.repeatEachIndex;
+  const room = 'Compact Multiplayer ' + info.repeatEachIndex;
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-  await page.goto('/' + encodeURIComponent(room) + '/Ada');
+  await page.goto('/' + encodeURIComponent(room) + '/Ada%20Long%20Player%20Name');
   const copy = page.getByRole('button', { name: 'Copy room name' });
   await expect(copy).toHaveText('');
   await expect(copy).toHaveAttribute('title', 'Copy room name');

@@ -97,7 +97,7 @@ function RoomView({ room, session }: { room: string; session: RoomSession }) {
           Connecting to room…
         </p>
       )}
-      <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-[minmax(0,1fr)_minmax(0,min(13rem,43%))] items-start gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,21rem)_minmax(0,1fr)] md:grid-rows-[minmax(0,1fr)] md:gap-5">
+      <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-[minmax(0,1fr)_min(14rem,48%)] items-start gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,21rem)_minmax(0,1fr)] md:grid-rows-[minmax(0,1fr)] md:gap-5">
         <PlayersPanel room={room} snapshot={snapshot} start={start} />
         <PlayArea snapshot={snapshot} />
         <OpponentsPanel

@@ -26,10 +26,10 @@ export function PlayersPanel({
       className="col-start-1 row-start-2 max-h-full min-w-0 gap-1.5 overflow-auto p-2 md:row-start-1 md:gap-3 md:p-4"
       render={(props) => <aside {...props} />}
     >
-      <h2 className="mb-0">Players</h2>
+      <h2 className="mb-0 shrink-0">Players</h2>
       {snapshot && (
         <>
-          <ul className="grid gap-1">
+          <ul className="grid min-h-0 gap-1 overflow-y-auto">
             {snapshot.roster.map((player) => (
               <li
                 key={player.id}
@@ -59,7 +59,7 @@ export function PlayersPanel({
             </p>
           )}
           {!roundActive && isHost && (
-            <div className="grid gap-1.5 md:gap-3">
+            <div className="grid shrink-0 gap-1.5 md:gap-3">
               <ModeSelect
                 modes={roomModes}
                 value={mode}
@@ -83,7 +83,7 @@ export function PlayersPanel({
           )}
         </>
       )}
-      <details>
+      <details className="min-h-5 overflow-y-auto">
         <summary className="cursor-pointer text-[0.875rem] text-muted">
           How to invite someone
         </summary>
