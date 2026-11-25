@@ -29,7 +29,7 @@ export function BoardView({
   return (
     <div
       ref={boardRef}
-      className="grid aspect-[1/2] grid-cols-10 grid-rows-20 gap-px"
+      className="grid aspect-[1/2] grid-cols-10 grid-rows-20 gap-px focus-visible:outline-none"
       role="img"
       tabIndex={0}
       aria-label="Your playing field, 10 columns by 20 rows"

@@ -23,10 +23,10 @@ function BoardNotice({
 }) {
   return (
     <div
-      className="absolute inset-x-2 top-[39%] grid gap-2 border-y border-border bg-surface px-2 py-4 text-center text-sm"
+      className="absolute inset-x-1 top-[39%] grid gap-1 border-y border-border bg-surface px-1 py-2 text-center text-xs sm:inset-x-2 sm:px-2 sm:text-sm"
       role="status"
     >
-      <strong className="text-lg wrap-anywhere">{title}</strong>
+      <strong className="text-sm wrap-anywhere sm:text-lg">{title}</strong>
       {children}
     </div>
   );
@@ -50,39 +50,39 @@ export function PlayArea({ snapshot }: { snapshot: Snapshot | null }) {
   }, [roundActive]);
 
   return (
-    <div className="grid justify-items-center gap-[0.85rem] [@media(475px<width<=700px)]:row-span-2">
-      <div className="relative w-full max-w-72 rounded-lg border border-border bg-[#0b0a0e] p-2">
-        <BoardView
-          board={snapshot?.board ?? blank}
-          piece={snapshot?.piece ?? null}
-          boardRef={boardRef}
-        />
-        {eliminated && (
-          <BoardNotice title="You’re out">
-            <span>Waiting for the round to finish.</span>
-          </BoardNotice>
-        )}
-        {snapshot && !roundActive && (
-          <BoardNotice
-            title={
-              snapshot.phase === "finished"
-                ? resultText(snapshot.result)
-                : "Waiting to start"
-            }
-          >
-            {snapshot.scoreSave === "pending" && (
-              <span>Saving scores…</span>
-            )}
-            {snapshot.scoreSave === "failed" && (
-              <span>Scores could not be saved.</span>
-            )}
-            {snapshot.scoreSave === "saved" && (
-              <Link to="/leaderboard">View leaderboard</Link>
-            )}
-          </BoardNotice>
-        )}
+    <div className="col-span-2 col-start-1 row-start-1 grid h-full min-h-0 grid-rows-[minmax(0,1fr)_auto] gap-1 md:col-span-1 md:col-start-2 md:gap-2">
+      <div className="grid min-h-0 place-items-center [container-type:size]">
+        <div className="relative w-[min(100%,50cqh,18rem)] rounded-lg border border-border bg-[#0b0a0e] p-1 sm:p-2">
+          <BoardView
+            board={snapshot?.board ?? blank}
+            piece={snapshot?.piece ?? null}
+            boardRef={boardRef}
+          />
+          {eliminated && (
+            <BoardNotice title="You’re out">
+              <span>Waiting for the round to finish.</span>
+            </BoardNotice>
+          )}
+          {snapshot && !roundActive && (
+            <BoardNotice
+              title={
+                snapshot.phase === "finished"
+                  ? resultText(snapshot.result)
+                  : "Waiting to start"
+              }
+            >
+              {snapshot.scoreSave === "pending" && <span>Saving scores…</span>}
+              {snapshot.scoreSave === "failed" && (
+                <span>Scores could not be saved.</span>
+              )}
+              {snapshot.scoreSave === "saved" && (
+                <Link to="/leaderboard">View leaderboard</Link>
+              )}
+            </BoardNotice>
+          )}
+        </div>
       </div>
-      <dl className="flex flex-wrap justify-center gap-3">
+      <dl className="flex flex-wrap justify-center gap-2 sm:gap-3">
         {controls.map(({ action, keys }) => (
           <div className="grid justify-items-center gap-1" key={action}>
             <dt className="flex gap-1">
