@@ -1,4 +1,4 @@
-FROM node:24-bookworm-slim AS base
+FROM node:25-bookworm-slim AS base
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN npm install --global "pnpm@$(node -p "require('./package.json').packageManager.split('@')[1]")"
