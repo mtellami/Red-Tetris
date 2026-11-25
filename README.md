@@ -2,7 +2,7 @@
 
 A networked falling-block puzzle for solo and multiplayer play.
 
-Run `make` to list the shortcuts. Use `make install` followed by `make dev` for local development, or `make up` to start the app with Docker.
+Run `make` or `make up` to start the app with Docker. Use `make help` to list the shortcuts, or `make install` followed by `make dev` for local development.
 
 ## Run locally
 
@@ -32,7 +32,7 @@ In production, Express serves the built client, the API, and Socket.IO on port 3
 make up
 ```
 
-Open <http://localhost:3000>. Set `PORT` to change the published host port. Compose runs one application container with the Express server and the compiled client. The named `leaderboard` volume preserves scores across container restarts and replacement. Use `make down` to stop the app.
+Open <http://localhost:3000>. Set `PORT` to change the published host port. Compose runs one application container with the Express server and the compiled client. Use `make down` to stop the app and keep its data. Use `make clean` to remove the containers, network, app image, and leaderboard volume. This deletes the saved scores.
 
 ## Play
 

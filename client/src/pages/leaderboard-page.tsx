@@ -37,9 +37,9 @@ export function LeaderboardPage() {
   }, [filter]);
 
   return (
-    <section className="mx-auto max-w-2xl">
+    <section className="mx-auto flex h-full max-w-2xl flex-col">
       <h1>Leaderboard</h1>
-      <Card>
+      <Card className="min-h-0 overflow-auto">
         <div className="grid grid-cols-2 gap-3">
           <ModeSelect modes={bonusModes} value={mode} onChange={setMode} />
           <Choice

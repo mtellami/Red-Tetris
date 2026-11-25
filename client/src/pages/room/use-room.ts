@@ -5,6 +5,10 @@ import type { Action } from '@game-core/game';
 import type { ClientEvents, ErrorCode, Mode, ServerEvents, Snapshot } from '@game-core/protocol';
 
 type RoomSocket = Socket<ServerEvents, ClientEvents>;
+type JoinState =
+  | { status: 'joining' | 'joined' }
+  | { status: 'rejected'; message: string; code?: ErrorCode };
+
 const errors: Record<ErrorCode, string> = {
   invalid_payload: 'Use 1–24 letters, numbers, spaces, hyphens, or underscores.',
   already_joined: 'This connection is already in a room.',
@@ -21,46 +25,74 @@ const actions: Readonly<Record<string, Action | undefined>> = {
 };
 
 type RoomState = {
+  room: string | undefined;
+  name: string | undefined;
   socket: RoomSocket | null;
   snapshot: Snapshot | null;
   message: string | null;
   connected: boolean;
+  join: JoinState;
 };
-const initial: RoomState = { socket: null, snapshot: null, message: null, connected: false };
+const initial: RoomState = {
+  room: undefined, name: undefined, socket: null, snapshot: null,
+  message: null, connected: false, join: { status: 'joining' },
+};
 type Event =
-  | { type: 'setup'; socket: RoomSocket }
-  | { type: 'connect' | 'disconnect' }
+  | { type: 'setup'; socket: RoomSocket; room: string; name: string }
+  | { type: 'reset' | 'connect' | 'disconnect' | 'joined' }
+  | { type: 'rejected'; message: string; code?: ErrorCode }
   | { type: 'snapshot'; snapshot: Snapshot }
   | { type: 'error'; message: string };
 
 export function reduceRoom(state: RoomState, event: Event): RoomState {
   switch (event.type) {
-    case 'setup': return { ...initial, socket: event.socket };
-    case 'connect': return { ...state, connected: true, message: null };
+    case 'reset': return initial;
+    case 'setup': return { ...initial, room: event.room, name: event.name, socket: event.socket };
+    case 'connect': return { ...state, connected: true, message: null, join: { status: 'joining' } };
     case 'disconnect': return { ...state, connected: false, snapshot: null, message: 'Connection lost. Reconnecting…' };
     case 'snapshot': return { ...state, snapshot: event.snapshot, message: null };
+    case 'joined': return { ...state, join: { status: 'joined' } };
+    case 'rejected': {
+      const { message, code } = event;
+      return { ...state, message, join: { status: 'rejected', message, code } };
+    }
     case 'error': return { ...state, message: event.message };
   }
 }
 
-export function useRoom(room: string, name: string) {
+export function useRoom(room?: string, name?: string) {
   const [state, dispatch] = useReducer(reduceRoom, initial);
 
   useEffect(() => {
-    const socket: RoomSocket = io({ autoConnect: false, forceNew: true });
+    if (!room || !name) {
+      dispatch({ type: 'reset' });
+      return;
+    }
+    const socket: RoomSocket = io({ autoConnect: false, forceNew: true, timeout: 5000 });
+    let joined = false;
     const join = () => {
       dispatch({ type: 'connect' });
       socket.timeout(5000).emit('room:join', { room, name }, (error, reply) => {
         if (!socket.connected) return;
-        if (error) dispatch({ type: 'error', message: 'The room did not respond. Reload to try again.' });
-        else if (!reply.ok) dispatch({ type: 'error', message: errors[reply.error] });
+        if (error) dispatch({ type: 'rejected', message: 'The room did not respond. Try again.' });
+        else if (!reply.ok) dispatch({ type: 'rejected', message: errors[reply.error], code: reply.error });
+        else {
+          joined = true;
+          dispatch({ type: 'joined' });
+        }
       });
     };
     socket.on('connect', join);
-    socket.on('disconnect', () => dispatch({ type: 'disconnect' }));
-    socket.on('connect_error', () => dispatch({ type: 'error', message: 'Unable to connect. Retrying…' }));
+    socket.on('disconnect', () => {
+      dispatch({ type: 'disconnect' });
+      if (!joined) dispatch({ type: 'rejected', message: 'Connection lost. Try again.' });
+    });
+    socket.on('connect_error', () => {
+      if (joined) dispatch({ type: 'error', message: 'Unable to connect. Retrying…' });
+      else dispatch({ type: 'rejected', message: 'Unable to connect. Try again.' });
+    });
     socket.on('room:snapshot', (snapshot) => dispatch({ type: 'snapshot', snapshot }));
-    dispatch({ type: 'setup', socket });
+    dispatch({ type: 'setup', socket, room, name });
     socket.connect();
     return () => {
       socket.removeAllListeners();
@@ -68,7 +100,8 @@ export function useRoom(room: string, name: string) {
     };
   }, [room, name]);
 
-  const { socket, snapshot, connected } = state;
+  const { socket, snapshot, connected, join, message } =
+    state.room === room && state.name === name ? state : initial;
   const roundId = snapshot?.roundId;
   const canPlay = connected && snapshot?.phase === 'running'
     && snapshot.roster.some(({ id, alive }) => id === snapshot.selfId && alive);
@@ -98,5 +131,7 @@ export function useRoom(room: string, name: string) {
     });
   };
 
-  return { ...state, start };
+  return { snapshot, connected, join, message, start };
 }
+
+export type RoomSession = ReturnType<typeof useRoom>;
