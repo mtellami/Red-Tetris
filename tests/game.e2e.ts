@@ -93,3 +93,62 @@ test('plays the bonus modes and loads scores from the persistent leaderboard', a
   await page.getByRole('button', { name: 'Start next round' }).click();
   await expect(page.getByText('Scored Classic · Solo')).toBeVisible();
 });
+
+test('keeps a duplicate name on the join form and allows a different name', async ({ browser }, info) => {
+  const room = 'Duplicate Room ' + info.repeatEachIndex;
+  const host = await browser.newPage();
+  const guest = await browser.newPage({ viewport: { width: 320, height: 568 } });
+  try {
+    const roomPath = '/' + encodeURIComponent(room);
+    await host.goto(roomPath + '/Ada');
+    await expect(host.getByRole('button', { name: 'Start round' })).toBeVisible();
+    await guest.goto('/');
+    await guest.getByLabel('Room name').fill(room);
+    await guest.getByLabel('Player name').fill('Ada');
+    await guest.getByRole('button', { name: /Enter room/ }).click();
+
+    const form = guest.locator('form').filter({ hasText: 'Join a room' });
+    await expect(form.getByRole('alert')).toHaveText('That player name is already in use in this room.');
+    await expect(guest).toHaveURL(/\/$/);
+    await expect(field(guest)).toHaveCount(0);
+    await expect(form.getByLabel('Player name')).toHaveValue('Ada');
+    await expect(form.getByRole('button', { name: /Enter room/ })).toBeInViewport({ ratio: 1 });
+
+    await guest.goto(roomPath + '/Ada');
+    await expect(form.getByRole('alert')).toHaveText('That player name is already in use in this room.');
+    await expect(form.getByLabel('Room name')).toHaveValue(room);
+    await expect(form.getByLabel('Player name')).toHaveValue('Ada');
+    await form.getByLabel('Player name').fill('Ben');
+    await form.getByRole('button', { name: /Enter room/ }).click();
+    await expect(guest).toHaveURL(new RegExp(encodeURIComponent(room) + '/Ben$'));
+    await expect(host.getByRole('img', { name: /Ben column heights/ })).toBeVisible();
+  } finally {
+    await Promise.all([host.close(), guest.close()]);
+  }
+});
+
+test('fits the playing field, keeps its focus unobtrusive, and copies via the icon', async ({ page, context }, info) => {
+  const room = 'Compact Room ' + info.repeatEachIndex;
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.goto('/' + encodeURIComponent(room) + '/Ada');
+  const copy = page.getByRole('button', { name: 'Copy room name' });
+  await expect(copy).toHaveText('');
+  await expect(copy).toHaveAttribute('title', 'Copy room name');
+  await copy.click();
+  await expect(page.getByText('Room name copied', { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(room);
+
+  const smallViewport = { width: 320, height: 568 };
+  await page.setViewportSize(smallViewport);
+  const start = page.getByRole('button', { name: 'Start round' });
+  await expect(start).toBeInViewport({ ratio: 1 });
+  await start.click();
+  await expect(field(page)).toBeFocused();
+  await expect(field(page)).toHaveCSS('outline-style', 'none');
+  for (const viewport of [smallViewport, { width: 768, height: 600 }, { width: 1280, height: 720 }]) {
+    await page.setViewportSize(viewport);
+    await expect(field(page)).toBeInViewport({ ratio: 1 });
+    expect(await page.locator('main').evaluate((element) => element.scrollHeight <= element.clientHeight)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight)).toBe(true);
+  }
+});

@@ -1,15 +1,15 @@
-import { Alert, Button, Card } from "@heroui/react";
-import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Alert, Button, Card, toast } from "@heroui/react";
+import { buttonVariants } from "@heroui/styles";
+import { Link, Navigate, useParams } from "react-router-dom";
 import { validName, validRoom } from "@game-core/protocol";
 import { OpponentsPanel } from "@/pages/room/opponents-panel";
 import { PlayArea } from "@/pages/room/play-area";
 import { PlayersPanel } from "@/pages/room/players-panel";
-import { useRoom } from "@/pages/room/use-room";
+import type { RoomSession } from "@/pages/room/use-room";
 
-const spacedRow = "flex items-center justify-between gap-4";
+const copyLabel = "Copy room name";
 
-export function RoomPage() {
+export function RoomPage({ session }: { session: RoomSession }) {
   const { room, playerName } = useParams();
   if (!validRoom(room) || !validName(playerName)) {
     return (
@@ -19,45 +19,68 @@ export function RoomPage() {
       </Card>
     );
   }
+  if (session.join.status === "rejected" && session.join.code === "name_taken") {
+    return (
+      <Navigate
+        to="/"
+        replace
+        state={{ room, name: playerName, message: session.join.message }}
+      />
+    );
+  }
   return (
     <RoomView
       key={JSON.stringify([room, playerName])}
       room={room}
-      name={playerName}
+      session={session}
     />
   );
 }
 
-function RoomView({ room, name }: { room: string; name: string }) {
-  const { snapshot, message, connected, start } = useRoom(room, name);
-  const [copyStatus, setCopyStatus] = useState("");
+function RoomView({ room, session }: { room: string; session: RoomSession }) {
+  const { snapshot, message, connected, start } = session;
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(room);
-      setCopyStatus("Room name copied");
+      toast.success("Room name copied");
     } catch {
-      setCopyStatus("Share the room name " + room);
+      toast.danger("Could not copy the room name. Share " + room + " to invite someone.");
     }
   };
 
   return (
-    <section>
-      <div className={spacedRow + " mb-6 flex-wrap"}>
-        <div>
+    <section className="flex h-full min-h-0 flex-col gap-2 sm:gap-3">
+      <div className="flex shrink-0 items-center justify-between gap-3">
+        <div className="min-w-0">
           <Link className="text-[0.9rem] text-muted hover:text-white" to="/">
             ← Rooms
           </Link>
-          <h1 className="mt-2 mb-0 wrap-anywhere">{room}</h1>
+          <h1 className="mt-1 mb-0 text-[clamp(1.6rem,4vw,2.5rem)] wrap-anywhere">
+            {room}
+          </h1>
         </div>
-        <div className={spacedRow + " flex-wrap text-[0.85rem]"}>
-          <Button variant="secondary" onPress={copy}>
-            Copy room name
-          </Button>
-          {copyStatus && <span role="status">{copyStatus}</span>}
-        </div>
+        <button
+          type="button"
+          className={buttonVariants({ isIconOnly: true, variant: "secondary" })}
+          aria-label={copyLabel}
+          title={copyLabel}
+          onClick={copy}
+        >
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="size-4"
+          >
+            <rect x="8" y="8" width="12" height="12" rx="2" />
+            <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+          </svg>
+        </button>
       </div>
       {message && (
-        <Alert status="danger" className="mb-4">
+        <Alert status="danger" className="shrink-0">
           <Alert.Indicator />
           <Alert.Content>
             <Alert.Description role="alert">{message}</Alert.Description>
@@ -70,11 +93,11 @@ function RoomView({ room, name }: { room: string; name: string }) {
         </Alert>
       )}
       {!snapshot && !message && (
-        <p className="text-muted" role="status">
+        <p className="mb-0 shrink-0 text-muted" role="status">
           Connecting to room…
         </p>
       )}
-      <div className="grid grid-cols-[minmax(11rem,1fr)_minmax(15rem,21rem)_minmax(11rem,1fr)] items-start gap-5 [@media(475px<width<=700px)]:grid-cols-[minmax(12rem,1fr)_minmax(11rem,1fr)] [@media(max-width:475px)]:grid-cols-1">
+      <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-[minmax(0,1fr)_minmax(0,min(13rem,43%))] items-start gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,21rem)_minmax(0,1fr)] md:grid-rows-[minmax(0,1fr)] md:gap-5">
         <PlayersPanel room={room} snapshot={snapshot} start={start} />
         <PlayArea snapshot={snapshot} />
         <OpponentsPanel

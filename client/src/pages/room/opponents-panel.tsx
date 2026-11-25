@@ -12,13 +12,13 @@ function Spectrum({
   out: boolean;
 }) {
   return (
-    <div className="border-t border-border py-2.5 wrap-anywhere">
+    <div className="border-t border-border py-1 wrap-anywhere md:py-2.5">
       <div className="flex items-center justify-between gap-4">
         <strong>{name}</strong>
         {out && <span className="text-muted">Out</span>}
       </div>
       <div
-        className="mt-2 grid h-15 grid-cols-10 items-end gap-0.5 border-b border-border bg-field"
+        className="mt-1 grid h-10 grid-cols-10 items-end gap-0.5 border-b border-border bg-field md:mt-2 md:h-15"
         role="img"
         aria-label={name + " column heights: " + heights.join(", ")}
       >
@@ -43,7 +43,7 @@ export function OpponentsPanel({
 }) {
   return (
     <Card<"aside">
-      className="[@media(max-width:700px)]:col-start-1"
+      className="col-start-2 row-start-2 max-h-full min-w-0 gap-1.5 overflow-auto p-2 md:col-start-3 md:row-start-1 md:gap-3 md:p-4"
       render={(props) => <aside {...props} />}
     >
       <h2 className="mb-0">Opponents</h2>
@@ -57,7 +57,7 @@ export function OpponentsPanel({
           />
         ))
       ) : (
-        <p className="text-sm text-muted">
+        <p className="mb-0 text-sm text-muted">
           Opponent boards appear here when other players join.
         </p>
       )}

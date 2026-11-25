@@ -32,8 +32,6 @@ export function attachRooms(
       }
       if (game) return respond({ ok: false, error: "already_joined" });
       const existing = rooms.get(request.room);
-      if (existing?.phase === "running")
-        return respond({ ok: false, error: "round_running" });
       if (
         [...(existing?.players.values() ?? [])].some(
           ({ name }) => name === request.name,
@@ -41,6 +39,8 @@ export function attachRooms(
       ) {
         return respond({ ok: false, error: "name_taken" });
       }
+      if (existing?.phase === "running")
+        return respond({ ok: false, error: "round_running" });
 
       game = existing ?? new Game(request.room, { ...services, publish });
       rooms.set(request.room, game);
