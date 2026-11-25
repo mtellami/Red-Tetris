@@ -22,15 +22,18 @@ export function PlayersPanel({
     window.location.origin + "/" + encodeURIComponent(room) + "/";
 
   return (
-    <Card<"aside"> render={(props) => <aside {...props} />}>
-      <h2 className="mb-0">Players</h2>
+    <Card<"aside">
+      className="col-start-1 row-start-2 max-h-full min-w-0 gap-1.5 overflow-auto p-2 md:row-start-1 md:gap-3 md:p-4"
+      render={(props) => <aside {...props} />}
+    >
+      <h2 className="mb-0 shrink-0">Players</h2>
       {snapshot && (
         <>
-          <ul className="mb-4 grid gap-[0.6rem]">
+          <ul className="grid min-h-0 gap-1 overflow-y-auto">
             {snapshot.roster.map((player) => (
               <li
                 key={player.id}
-                className="flex items-center justify-between gap-2 border-b border-border py-2 wrap-anywhere"
+                className="flex items-center justify-between gap-2 border-b border-border py-1 wrap-anywhere md:py-2"
               >
                 <strong>
                   {player.name}
@@ -48,7 +51,7 @@ export function PlayersPanel({
             ))}
           </ul>
           {snapshot.score !== null && (
-            <p className="text-[0.875rem] leading-[1.5]">
+            <p className="mb-0 text-sm">
               Score{" "}
               <strong className="ml-[0.3rem] text-accent">
                 {snapshot.score}
@@ -56,13 +59,13 @@ export function PlayersPanel({
             </p>
           )}
           {!roundActive && isHost && (
-            <div className="mb-4 grid gap-3">
+            <div className="grid shrink-0 gap-1.5 md:gap-3">
               <ModeSelect
                 modes={roomModes}
                 value={mode}
                 onChange={setMode}
               />
-              <Button onPress={() => start(mode)}>
+              <Button className="w-full" onPress={() => start(mode)}>
                 {snapshot.phase === "finished"
                   ? "Start next round"
                   : "Start round"}
@@ -70,17 +73,17 @@ export function PlayersPanel({
             </div>
           )}
           {!roundActive && !isHost && (
-            <p className="text-sm text-muted">Waiting for the host to start.</p>
+            <p className="mb-0 text-sm text-muted">Waiting for the host to start.</p>
           )}
           {roundActive && (
-            <p className="text-sm text-muted">
+            <p className="mb-0 text-sm text-muted">
               {MODES[snapshot.mode].label} ·{" "}
               {snapshot.category === "solo" ? "Solo" : "Multiplayer"}
             </p>
           )}
         </>
       )}
-      <details>
+      <details className="min-h-5 overflow-y-auto">
         <summary className="cursor-pointer text-[0.875rem] text-muted">
           How to invite someone
         </summary>

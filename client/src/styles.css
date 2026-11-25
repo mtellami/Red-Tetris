@@ -13,6 +13,7 @@
 @import "@heroui/styles/components/list-box.css" layer(components);
 @import "@heroui/styles/components/select.css" layer(components);
 @import "@heroui/styles/components/textfield.css" layer(components);
+@import "@heroui/styles/components/toast.css" layer(components);
 
 @theme {
   --font-sans: system-ui, sans-serif;
@@ -39,7 +40,7 @@
   }
 
   body {
-    @apply min-h-screen min-w-[280px];
+    @apply min-h-dvh min-w-[280px];
   }
 
   a {

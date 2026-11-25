@@ -6,6 +6,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { App } from '@/app';
 import { BoardView } from '@/pages/room/board-view';
 import { emptyBoard, spawn } from '@game-core/game';
+import type { Reply } from '@game-core/protocol';
 
 const connection = vi.hoisted(() => {
   const handlers = new Map<string, (...args: unknown[]) => unknown>();
@@ -43,6 +44,9 @@ it('validates the home form and joins with an encoded room name', async () => {
   fireEvent.click(screen.getByRole('button', { name: /Enter room/ }));
   expect(screen.getByRole('alert').textContent).toContain('1–24');
   fireEvent.change(screen.getByLabelText('Room name'), { target: { value: 'Friday Game' } });
+  connection.emit.mockImplementationOnce((_event, _payload, ack: (error: null, reply: Reply) => void) => {
+    ack(null, { ok: true });
+  });
   fireEvent.click(screen.getByRole('button', { name: /Enter room/ }));
   expect(await screen.findByRole('heading', { name: 'Friday Game' })).toBeTruthy();
   expect(connection.emit).toHaveBeenCalledWith('room:join', { room: 'Friday Game', name: 'Ada' }, expect.any(Function));

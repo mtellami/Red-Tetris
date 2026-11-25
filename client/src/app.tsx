@@ -1,10 +1,14 @@
-import { Card } from "@heroui/react";
-import { Link, Route, Routes } from "react-router-dom";
+import { Card, Toast } from "@heroui/react";
+import { useEffect, useState } from "react";
+import { Link, Route, Routes, useMatch, useNavigate } from "react-router-dom";
+import { validName, validRoom } from "@game-core/protocol";
 import { HomePage } from "@/pages/home-page";
 import { LeaderboardPage } from "@/pages/leaderboard-page";
 import { RoomPage } from "@/pages/room/room-page";
+import { useRoom } from "@/pages/room/use-room";
 
 const pageWidth = "mx-auto w-[min(100%_-_2rem,72rem)]";
+type RoomEntry = { room: string; name: string };
 
 function Brand() {
   return (
@@ -28,12 +32,43 @@ function Brand() {
 }
 
 export function App() {
+  const navigate = useNavigate();
+  const atHome = Boolean(useMatch("/"));
+  const roomRoute = useMatch("/:room/:playerName");
+  const { room, playerName } = roomRoute?.params ?? {};
+  const [pendingEntry, setPendingEntry] = useState<RoomEntry | null>(null);
+  const [joinError, setJoinError] = useState("");
+  const entry = atHome
+    ? pendingEntry
+    : validRoom(room) && validName(playerName)
+      ? { room, name: playerName }
+      : null;
+  const session = useRoom(entry?.room, entry?.name);
+
+  useEffect(() => {
+    if (!atHome) {
+      setPendingEntry(null);
+      setJoinError("");
+    } else if (pendingEntry) {
+      if (session.join.status === "joined") {
+        void navigate(
+          "/" + encodeURIComponent(pendingEntry.room) +
+          "/" + encodeURIComponent(pendingEntry.name),
+        );
+      } else if (session.join.status === "rejected") {
+        setJoinError(session.join.message);
+        setPendingEntry(null);
+      }
+    }
+  }, [atHome, navigate, pendingEntry, session.join]);
+
   return (
-    <>
+    <div className="flex h-dvh flex-col overflow-hidden">
+      <Toast.Provider placement="bottom end" />
       <header className="border-b border-border">
         <div
           className={
-            pageWidth + " flex min-h-18 items-center justify-between gap-4"
+            pageWidth + " flex min-h-12 items-center justify-between gap-4 sm:min-h-14"
           }
         >
           <Brand />
@@ -45,11 +80,26 @@ export function App() {
           </Link>
         </div>
       </header>
-      <main className={pageWidth + " pt-8 pb-12"}>
+      <main className={pageWidth + " min-h-0 flex-1 overflow-auto py-3 sm:py-4"}>
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route
+            path="/"
+            element={
+              <HomePage
+                isJoining={pendingEntry !== null}
+                joinError={joinError}
+                onJoin={(room, name) => {
+                  setJoinError("");
+                  setPendingEntry({ room, name });
+                }}
+              />
+            }
+          />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
-          <Route path="/:room/:playerName" element={<RoomPage />} />
+          <Route
+            path="/:room/:playerName"
+            element={<RoomPage session={session} />}
+          />
           <Route
             path="*"
             element={
@@ -61,6 +111,6 @@ export function App() {
           />
         </Routes>
       </main>
-    </>
+    </div>
   );
 }
