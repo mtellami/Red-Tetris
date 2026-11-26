@@ -2,6 +2,8 @@
 
 A networked falling-block puzzle for solo and multiplayer play.
 
+[Play Red Tetris online](https://red-tetris-96vv.onrender.com). The free Render service may take about a minute to wake up, and its leaderboard resets when the service restarts.
+
 Run `make` or `make up` to start the app with Docker. Use `make help` to list the shortcuts, or `make install` followed by `make dev` for local development.
 
 ## Run locally
