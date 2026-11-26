@@ -3,7 +3,7 @@ import { Server } from 'socket.io';
 import { io as connect } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 import { afterEach, beforeEach, expect, it } from 'vitest';
-import { attachRooms } from '../src/sockets.js';
+import { attachRooms } from '../src/socket.js';
 import type { ClientEvents, Mode, OpenRoom, ServerEvents, Snapshot } from '#game/protocol';
 
 const httpClients: Socket<ServerEvents, ClientEvents>[] = [];

@@ -1,9 +1,9 @@
 import { join, resolve } from "node:path";
 import { Server } from "socket.io";
 import type { ClientEvents, ServerEvents } from "#game/protocol";
-import { createApp } from "./http.js";
-import { Leaderboard } from "./leaderboard.js";
-import { attachRooms } from "./sockets.js";
+import { createApp } from "./app.js";
+import { attachRooms } from "./socket.js";
+import { Leaderboard } from "./storage/leaderboard.js";
 
 const apiOnly = process.argv.includes("--api-only");
 const project = resolve(

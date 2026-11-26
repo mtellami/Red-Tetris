@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import express from "express";
 import { isCategory, isMode } from "#game/protocol";
-import type { Leaderboard } from "./leaderboard.js";
+import type { Leaderboard } from "./storage/leaderboard.js";
 
 export function createApp(leaderboard: Leaderboard, clientDir?: string) {
   const app = express();

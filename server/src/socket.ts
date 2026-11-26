@@ -2,8 +2,9 @@ import type { Server } from "socket.io";
 import { ACTIONS } from "#game/game";
 import { isMode, validName, validRoom } from "#game/protocol";
 import type { Ack, ClientEvents, OpenRoom, ServerEvents } from "#game/protocol";
-import { Game, Player } from "./game.js";
-import type { GameServices } from "./game.js";
+import { Game } from "./game/game.js";
+import type { GameServices } from "./game/game.js";
+import { Player } from "./game/player.js";
 
 type GameSocketServer = Server<ClientEvents, ServerEvents>;
 const directory = "rooms:directory";

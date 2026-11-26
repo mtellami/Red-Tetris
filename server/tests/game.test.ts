@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { emptyBoard, spawn } from '#game/game';
 import type { Cell } from '#game/game';
-import { Game, Player } from '../src/game.js';
+import { Game } from '../src/game/game.js';
+import { Player } from '../src/game/player.js';
 import { MODES } from '#game/protocol';
 
 const mutableBoard = () => emptyBoard().map((row) => [...row]);

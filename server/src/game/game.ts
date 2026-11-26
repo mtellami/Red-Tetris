@@ -3,7 +3,6 @@ import {
   KINDS,
   addPenalty,
   collides,
-  emptyBoard,
   gravity,
   hardDrop,
   isGrounded,
@@ -11,10 +10,9 @@ import {
   move,
   penaltyFor,
   pointsFor,
-  spawn,
   spectrum,
 } from "#game/game";
-import type { Action, FallingPiece, Kind } from "#game/game";
+import type { Action } from "#game/game";
 import { MODES } from "#game/protocol";
 import type {
   Category,
@@ -24,42 +22,8 @@ import type {
   RoundResult,
   Snapshot,
 } from "#game/protocol";
-
-export class Piece {
-  constructor(readonly kind: Kind) {}
-
-  spawn(): FallingPiece {
-    return spawn(this.kind);
-  }
-}
-
-export class Player {
-  board = emptyBoard();
-  piece: FallingPiece | null = null;
-  cursor = 0;
-  grounded = false;
-  alive = false;
-  score = 0;
-
-  constructor(
-    readonly id: string,
-    readonly name: string,
-  ) {}
-
-  reset() {
-    this.board = emptyBoard();
-    this.piece = null;
-    this.cursor = 0;
-    this.grounded = false;
-    this.alive = true;
-    this.score = 0;
-  }
-
-  eliminate() {
-    this.alive = false;
-    this.piece = null;
-  }
-}
+import { Piece } from "./piece.js";
+import type { Player } from "./player.js";
 
 export interface GameServices {
   publish: (game: Game) => void;

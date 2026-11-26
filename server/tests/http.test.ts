@@ -4,8 +4,8 @@ import type { Server } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { Leaderboard } from '../src/leaderboard.js';
-import { createApp } from '../src/http.js';
+import { createApp } from '../src/app.js';
+import { Leaderboard } from '../src/storage/leaderboard.js';
 
 let directory: string;
 let server: Server | undefined;
