@@ -61,7 +61,23 @@ export function App() {
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
-      <Toast.Provider placement="bottom end" />
+      <Toast.Provider placement="bottom end">
+        {({ toast }) => (
+          <Toast toast={toast} variant={toast.content.variant}>
+            <Toast.Indicator>
+              <span aria-hidden="true" className="font-bold">
+                {toast.content.variant === "success" ? "✓" : "!"}
+              </span>
+            </Toast.Indicator>
+            <Toast.Content>
+              <Toast.Title>{toast.content.title}</Toast.Title>
+            </Toast.Content>
+            <Toast.CloseButton>
+              <span aria-hidden="true" className="text-lg leading-none">×</span>
+            </Toast.CloseButton>
+          </Toast>
+        )}
+      </Toast.Provider>
       <header className="border-b border-border">
         <div
           className={

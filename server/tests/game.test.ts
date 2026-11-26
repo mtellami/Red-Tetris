@@ -53,6 +53,33 @@ describe('authoritative round', () => {
     expect(game.result).toEqual({ kind: 'winner', playerId: first.id, name: first.name });
   });
 
+  it('keeps a freshly spawned opponent with an empty board in the round after a penalty', () => {
+    const { game, first, second } = setup();
+    game.start('classic');
+    const board = mutableBoard();
+    for (const y of [18, 19]) board[y].fill('J').fill(null, 4, 6);
+    first.board = board;
+    first.piece = spawn('O');
+    second.piece = spawn('T');
+    const cursor = second.cursor;
+
+    game.input(first, 'hardDrop');
+    expect(second.alive).toBe(true);
+    expect(second.board[19]).toEqual(Array<Cell>(10).fill('penalty'));
+    expect(second.piece).toEqual(spawn('T'));
+    expect(second.cursor).toBe(cursor);
+    expect(game.phase).toBe('running');
+    expect(game.result).toBeNull();
+
+    game.input(second, 'left');
+    expect(second.piece?.x).toBe(spawn('T').x - 1);
+    game.input(second, 'hardDrop');
+    expect(second.board[18]).toContain('T');
+    expect(second.cursor).toBe(cursor + 1);
+    expect(game.phase).toBe('running');
+    game.dispose();
+  });
+
   it('resolves simultaneous spawn failures as a draw and reports a failed save', async () => {
     const { game, first, second, save } = setup();
     save.mockRejectedValueOnce(new Error('disk full'));

@@ -66,7 +66,33 @@ describe('pure board rules', () => {
     expect(raised.overflow).toBe(false);
     expect(raised.board[8][2]).toBe('S');
     expect(spectrum(raised.board)[2]).toBe(12);
+    board[0][0] = 'S';
     expect(addPenalty(board, spawn('O'), 1).overflow).toBe(true);
     expect(addPenalty(board, null, 25).overflow).toBe(true);
+  });
+
+  it('limits the lift to the highest occupied cell', () => {
+    const board = emptyBoard();
+    expect(addPenalty(board, spawn('T'), 3)).toMatchObject({
+      piece: spawn('T'),
+      overflow: false,
+    });
+    expect(addPenalty(board, spawn('I'), 3)).toMatchObject({
+      piece: { ...spawn('I'), y: -1 },
+      overflow: false,
+    });
+  });
+
+  it('tries the original spawn if the lifted piece hits the stack', () => {
+    const board = mutableBoard();
+    const shifted = { ...spawn('O'), x: 0 };
+    board[2][1] = 'S';
+    expect(addPenalty(board, shifted, 1)).toMatchObject({
+      piece: spawn('O'),
+      overflow: false,
+    });
+
+    board[2][4] = 'S';
+    expect(addPenalty(board, shifted, 1).overflow).toBe(true);
   });
 });

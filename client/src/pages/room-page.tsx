@@ -51,7 +51,9 @@ function RoomView({ room, session }: { room: string; session: RoomSession }) {
       />
       {message && (
         <Alert status="danger" className="shrink-0">
-          <Alert.Indicator />
+          <Alert.Indicator>
+            <span aria-hidden="true" className="font-bold">!</span>
+          </Alert.Indicator>
           <Alert.Content>
             <Alert.Description role="alert">{message}</Alert.Description>
           </Alert.Content>

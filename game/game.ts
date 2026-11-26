@@ -184,16 +184,20 @@ export function addPenalty(
   const overflow = board
     .slice(0, amount)
     .some((cells) => cells.some((cell) => cell !== null));
-  const next = piece && { ...piece, y: piece.y - amount };
   const nextBoard = [
     ...board.slice(amount),
     ...Array.from({ length: amount }, () => row("penalty")),
   ];
-  return {
-    board: nextBoard,
-    piece: next,
-    overflow: overflow || (next !== null && collides(nextBoard, next)),
-  };
+  if (overflow || piece === null)
+    return { board: nextBoard, piece, overflow };
+
+  const top = Math.min(...coordinates(piece).map(([, y]) => y));
+  const lifted = { ...piece, y: piece.y - Math.min(amount, top) };
+  if (!collides(nextBoard, lifted))
+    return { board: nextBoard, piece: lifted, overflow: false };
+
+  const atSpawn = spawn(piece.kind);
+  return { board: nextBoard, piece: atSpawn, overflow: collides(nextBoard, atSpawn) };
 }
 
 export function spectrum(board: Board): number[] {

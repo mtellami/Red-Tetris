@@ -133,7 +133,9 @@ export function HomePage({
           />
           {feedback && (
             <Alert status="danger" className="p-2 sm:p-3">
-              <Alert.Indicator />
+              <Alert.Indicator>
+                <span aria-hidden="true" className="font-bold">!</span>
+              </Alert.Indicator>
               <Alert.Content>
                 <Alert.Description role="alert" className="mb-0">
                   {feedback}

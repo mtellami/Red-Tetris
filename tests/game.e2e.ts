@@ -82,7 +82,17 @@ test('plays the bonus modes and leaves the leaderboard empty after a zero-point 
   const room = '/Bonus' + info.repeatEachIndex;
   const name = 'Dana' + info.repeatEachIndex;
   await page.goto(room + '/' + name);
-  await chooseMode(page, 'Invisible Pieces');
+  const mode = page.getByRole('button', { name: /\bMode\b/ });
+  await expect(mode).toHaveText('Classic');
+  await expect(page.locator('svg')).toHaveCount(0);
+  await mode.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('listbox')).toBeVisible();
+  await expect(page.locator('svg')).toHaveCount(0);
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('Enter');
+  await expect(mode).toHaveText('Invisible Pieces');
   await page.getByRole('button', { name: 'Start round' }).click();
   await expect(page.getByText('Invisible Pieces · Solo')).toBeVisible();
   await expect(occupiedCells(page)).toHaveCount(0);
@@ -118,6 +128,7 @@ test('keeps a duplicate name on the join form and allows a different name', asyn
 
     const form = guest.locator('form').filter({ hasText: 'Join a room' });
     await expect(form.getByRole('alert')).toHaveText('That player name is already in use in this room.');
+    await expect(guest.locator('svg')).toHaveCount(0);
     await expect(guest).toHaveURL(/\/$/);
     await expect(field(guest)).toHaveCount(0);
     await expect(form.getByLabel('Player name')).toHaveValue('Ada');
@@ -154,11 +165,15 @@ test('shares a room link that prefills a guest’s join form', async ({ page, co
   await expect(iconStroke).toHaveCSS('border-top-color', await copyLink.evaluate((button) => getComputedStyle(button).color));
   await copyLink.click();
   await expect(page.getByText('Invite link copied', { exact: true })).toBeVisible();
+  await expect(page.locator('svg')).toHaveCount(0);
   const invite = await page.evaluate(() => navigator.clipboard.readText());
   await expect(inviteCard.getByRole('textbox', { name: 'Invite link' })).toHaveValue(invite);
   expect(new URL(invite).searchParams.get('room')).toBe(room);
   await drawer.getByRole('button', { name: 'Close room controls' }).click();
   await expect(drawer).toHaveCount(0);
+  await page.getByText('Invite link copied', { exact: true }).hover();
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(page.getByText('Invite link copied', { exact: true })).toHaveCount(0);
 
   const guest = await context.newPage();
   try {
@@ -238,6 +253,10 @@ test('keeps the join form intact when a selected room starts or closes', async (
     await expect(host.getByText('Classic · Solo')).toBeVisible();
     await page.getByRole('button', { name: /Enter room/ }).click();
     await expect(page.getByRole('alert')).toContainText('A round is in progress');
+    await directory.goto('/' + encodeURIComponent(firstRoom) + '/Dana');
+    await expect(directory.getByRole('alert')).toContainText('A round is in progress');
+    await expect(directory.locator('svg')).toHaveCount(0);
+    await directory.goto('/rooms');
 
     await page.getByRole('link', { name: 'Rooms', exact: true }).click();
     await selectClosing.click();
