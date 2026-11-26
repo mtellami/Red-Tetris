@@ -83,16 +83,22 @@ it('serves the deep-linked SPA, assets and leaderboard API with meaningful error
   if (!address || typeof address === 'string') throw new Error('Missing test server address');
   const get = (path: string, init?: RequestInit) => fetch('http://127.0.0.1:' + address.port + path, init);
 
-  expect(await (await get('/Friday%20Game/Ada')).text()).toContain('/bundle.js');
-  expect((await get('/assets/Ada')).status).toBe(200);
-  expect((await get('/leaderboard')).status).toBe(200);
-  expect((await get('/rooms')).status).toBe(200);
-  expect((await get('/rooms/')).status).toBe(200);
-  expect((await get('/rooms/Ada')).status).toBe(200);
-  expect((await get('/bundle.js', { method: 'HEAD' })).headers.get('content-type')).toContain('javascript');
-  expect((await get('/assets/missing.css')).status).toBe(404);
+  const navigation = { headers: { Accept: 'text/html,application/xhtml+xml,*/*;q=0.8' } };
+  for (const path of ['/', '/Friday%20Game/Ada', '/assets/Ada', '/leaderboard', '/rooms', '/rooms/', '/rooms/Ada', '/unknown/page/path', '/apiary', '/unknown.page']) {
+    const response = await get(path, navigation);
+    expect(response.status, path).toBe(200);
+    expect(response.headers.get('content-type')).toContain('text/html');
+    expect(response.headers.get('vary')).toContain('Accept');
+    expect(await response.text()).toContain('/bundle.js');
+  }
+  expect((await get('/unknown/page/path', { ...navigation, method: 'HEAD' })).status).toBe(200);
+  expect((await get('/unknown/page/path', { headers: { Accept: 'text/html;q=0,*/*' } })).status).toBe(404);
+  expect((await get('/bundle.js', { ...navigation, method: 'HEAD' })).headers.get('content-type')).toContain('javascript');
+  expect((await get('/assets/missing.css', { headers: { Accept: 'text/css,*/*;q=0.1' } })).status).toBe(404);
   expect((await get('/missing.js')).status).toBe(404);
-  expect((await get('/api/missing')).status).toBe(404);
+  const missingApi = await get('/api/missing', navigation);
+  expect(missingApi.status).toBe(404);
+  expect(await missingApi.json()).toEqual({ error: 'not_found' });
   expect((await get('/', { method: 'POST' })).status).toBe(405);
   expect((await get('/api/leaderboard?category=invalid')).status).toBe(400);
   const score = { name: 'Ada', score: 100, completedAt: '2026-02-01T00:00:00.000Z' };

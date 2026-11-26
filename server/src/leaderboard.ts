@@ -1,11 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import type {
-  Category,
-  LeaderboardEntry,
-  ScoredMode,
-} from "#game-core/protocol";
+import type { Category, LeaderboardEntry, ScoredMode } from "#game/protocol";
 
 type Rankings = Partial<
   Record<`${ScoredMode}:${Category}`, LeaderboardEntry[]>

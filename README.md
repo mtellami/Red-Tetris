@@ -56,11 +56,11 @@ A clear of one, two, three, or four rows in a bonus mode earns 100, 300, 500, or
 
 ## Architecture
 
-One root `package.json` and lockfile cover the whole app. The client and server import game rules and protocol types from `game-core/`.
+One root `package.json` and lockfile cover the whole app. The client and server import game rules and protocol types from `game/`.
 
 - `client/` contains the React SPA, Vite configuration, and browser entry point `client/index.html`. It builds `index.html`, `bundle.js`, and static assets into `client/dist/`.
 - `server/` owns Express routing, Socket.IO events, room state, and score storage. Prototype-backed `Player`, `Piece`, and `Game` classes coordinate the game.
-- `game-core/` contains the board rules in `game.ts`, their tests in `game.test.ts`, and the typed Socket.IO protocol in `protocol.ts`. The client uses `@game-core/` and the server uses `#game-core/`.
+- `game/` contains the board rules in `game.ts`, their tests in `game.test.ts`, and the typed Socket.IO protocol in `protocol.ts`. The client uses `@game/` and the server uses `#game/`.
 - `config/` contains the repo-wide TypeScript, test, and Docker configuration.
 
 The browser sends `room:join` with a room and name, `round:start` with a mode and round ID, and `player:input` with a keyboard action and round ID. The server checks membership, host authority, and round IDs before updating state. Each `room:snapshot` includes the recipient’s board, the room roster and phase, opponents’ spectra, and the round result when available. Active games live in memory. The bonus leaderboard uses a local file for completed scores.

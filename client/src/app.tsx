@@ -1,13 +1,13 @@
 import { Card, Toast } from "@heroui/react";
 import { useEffect, useState } from "react";
 import { Link, NavLink, Route, Routes, useLocation, useMatch, useNavigate } from "react-router-dom";
-import { validName, validRoom } from "@game-core/protocol";
+import { validName, validRoom } from "@game/protocol";
 import brandMark from "@/assets/red-tetris-mark.png";
 import { HomePage } from "@/pages/home-page";
 import { LeaderboardPage } from "@/pages/leaderboard-page";
 import { OpenRooms } from "@/pages/open-rooms";
-import { RoomPage } from "@/pages/room/room-page";
-import { useRoom } from "@/pages/room/use-room";
+import { RoomPage } from "@/pages/room-page";
+import { useRoom } from "@/hooks/use-room";
 
 const pageWidth = "mx-auto w-[min(100%_-_2rem,72rem)]";
 type RoomEntry = { room: string; name: string; lobbyOnly?: boolean };

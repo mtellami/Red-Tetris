@@ -4,8 +4,8 @@ import { Link } from "react-router-dom";
 import { io } from "socket.io-client";
 import type { Socket } from "socket.io-client";
 import emptyMark from "@/assets/empty-leaderboard-mark.png";
-import { MODES } from "@game-core/protocol";
-import type { ClientEvents, Mode, OpenRoom, ServerEvents } from "@game-core/protocol";
+import { MODES } from "@game/protocol";
+import type { ClientEvents, Mode, OpenRoom, ServerEvents } from "@game/protocol";
 
 const roomModes = Object.keys(MODES) as Mode[];
 

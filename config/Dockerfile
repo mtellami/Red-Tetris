@@ -8,7 +8,7 @@ RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY config/tsconfig*.json config/
 COPY client/ client/
 COPY server/ server/
-COPY game-core/ game-core/
+COPY game/ game/
 RUN pnpm build:server && pnpm build:client
 
 FROM base AS production

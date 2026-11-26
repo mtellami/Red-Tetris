@@ -1,6 +1,6 @@
 import { Button, Card } from "@heroui/react";
-import { MODES } from "@game-core/protocol";
-import type { Mode } from "@game-core/protocol";
+import { MODES } from "@game/protocol";
+import type { Mode } from "@game/protocol";
 import { ModeSelect } from "@/components/mode-select";
 
 const roomModes = Object.keys(MODES) as Mode[];

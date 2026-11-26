@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "imports": {
-    "#game-core/*": {
-      "types": "./game-core/*.ts",
-      "development": "./game-core/*.ts",
-      "default": "./dist/game-core/*.js"
+    "#game/*": {
+      "types": "./game/*.ts",
+      "development": "./game/*.ts",
+      "default": "./dist/game/*.js"
     }
   },
   "engines": {

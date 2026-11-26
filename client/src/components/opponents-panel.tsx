@@ -1,7 +1,7 @@
 import { Card } from "@heroui/react";
-import { HEIGHT } from "@game-core/game";
-import type { Snapshot } from "@game-core/protocol";
-import { PlayerAvatar } from "@/pages/room/player-avatar";
+import { HEIGHT } from "@game/game";
+import type { Snapshot } from "@game/protocol";
+import { PlayerAvatar } from "@/components/player-avatar";
 
 function Spectrum({
   name,

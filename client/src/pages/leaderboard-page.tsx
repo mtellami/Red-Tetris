@@ -2,12 +2,12 @@ import { buttonVariants } from "@heroui/styles";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import emptyMark from "@/assets/empty-leaderboard-mark.png";
-import { MODES } from "@game-core/protocol";
+import { MODES } from "@game/protocol";
 import type {
   Category,
   LeaderboardEntry,
   ScoredMode,
-} from "@game-core/protocol";
+} from "@game/protocol";
 
 const modes = (["scored", "invisible", "fast"] as const).map((id) => ({
   id,

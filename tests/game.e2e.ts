@@ -21,6 +21,15 @@ const dropUntilOut = async (page: Page) => {
   await expect(gameOver).toBeVisible();
 };
 
+test('shows the client not-found page on direct navigation', async ({ page }) => {
+  const response = await page.goto('/unknown/page/path');
+  expect(response?.status()).toBe(200);
+  await expect(page.getByRole('heading', { name: 'Page unavailable' })).toBeVisible();
+  await page.getByRole('link', { name: 'Return home' }).click();
+  await expect(page).toHaveURL('/');
+  await expect(page.getByRole('heading', { name: 'Red Tetris' })).toBeVisible();
+});
+
 test('opens a production deep link and plays and restarts a solo Classic round', async ({ page }, info) => {
   const room = 'Friday Arcade ' + info.repeatEachIndex;
   await page.goto('/' + encodeURIComponent(room) + '/Ada');

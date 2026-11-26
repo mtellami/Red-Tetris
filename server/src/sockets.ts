@@ -1,7 +1,7 @@
 import type { Server } from "socket.io";
-import { ACTIONS } from "#game-core/game";
-import { isMode, validName, validRoom } from "#game-core/protocol";
-import type { Ack, ClientEvents, OpenRoom, ServerEvents } from "#game-core/protocol";
+import { ACTIONS } from "#game/game";
+import { isMode, validName, validRoom } from "#game/protocol";
+import type { Ack, ClientEvents, OpenRoom, ServerEvents } from "#game/protocol";
 import { Game, Player } from "./game.js";
 import type { GameServices } from "./game.js";
 
@@ -19,9 +19,14 @@ export function attachRooms(
   const openRooms = (): OpenRoom[] =>
     [...rooms.values()]
       .filter((game) => game.phase === "lobby" && game.players.size > 0)
-      .map((game) => ({ room: game.room, playerCount: game.players.size, mode: game.selectedMode }))
+      .map((game) => ({
+        room: game.room,
+        playerCount: game.players.size,
+        mode: game.selectedMode,
+      }))
       .sort((a, b) => a.room.localeCompare(b.room));
-  const publishOpenRooms = () => io.to(directory).emit("rooms:open", openRooms());
+  const publishOpenRooms = () =>
+    io.to(directory).emit("rooms:open", openRooms());
   const publish = (game: Game) => {
     for (const player of game.players.values()) {
       io.to(player.id).emit("room:snapshot", game.snapshot(player));
@@ -40,8 +45,10 @@ export function attachRooms(
     socket.on("room:join", (request, ack) => {
       const respond = getAck(ack);
       if (
-        !validRoom(request?.room) || !validName(request?.name) ||
-        (request.lobbyOnly !== undefined && typeof request.lobbyOnly !== "boolean")
+        !validRoom(request?.room) ||
+        !validName(request?.name) ||
+        (request.lobbyOnly !== undefined &&
+          typeof request.lobbyOnly !== "boolean")
       ) {
         return respond({ ok: false, error: "invalid_payload" });
       }
@@ -50,7 +57,10 @@ export function attachRooms(
       if (request.lobbyOnly && existing?.phase !== "lobby") {
         return respond({
           ok: false,
-          error: existing?.phase === "running" ? "round_running" : "room_unavailable",
+          error:
+            existing?.phase === "running"
+              ? "round_running"
+              : "room_unavailable",
         });
       }
       if (
@@ -93,8 +103,10 @@ export function attachRooms(
 
     socket.on("round:start", (request, ack) => {
       const respond = getAck(ack);
-      if (!Number.isSafeInteger(request?.roundId) ||
-          (request.mode !== undefined && !isMode(request.mode))) {
+      if (
+        !Number.isSafeInteger(request?.roundId) ||
+        (request.mode !== undefined && !isMode(request.mode))
+      ) {
         return respond({ ok: false, error: "invalid_payload" });
       }
       if (!game) return respond({ ok: false, error: "not_joined" });

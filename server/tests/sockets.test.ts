@@ -4,7 +4,7 @@ import { io as connect } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 import { afterEach, beforeEach, expect, it } from 'vitest';
 import { attachRooms } from '../src/sockets.js';
-import type { ClientEvents, Mode, OpenRoom, ServerEvents, Snapshot } from '#game-core/protocol';
+import type { ClientEvents, Mode, OpenRoom, ServerEvents, Snapshot } from '#game/protocol';
 
 const httpClients: Socket<ServerEvents, ClientEvents>[] = [];
 let server: Server<ClientEvents, ServerEvents>;

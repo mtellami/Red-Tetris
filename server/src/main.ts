@@ -1,6 +1,6 @@
 import { join, resolve } from "node:path";
 import { Server } from "socket.io";
-import type { ClientEvents, ServerEvents } from "#game-core/protocol";
+import type { ClientEvents, ServerEvents } from "#game/protocol";
 import { createApp } from "./http.js";
 import { Leaderboard } from "./leaderboard.js";
 import { attachRooms } from "./sockets.js";

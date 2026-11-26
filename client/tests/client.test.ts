@@ -4,9 +4,9 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, expect, it, vi } from 'vitest';
 import { App } from '@/app';
-import { BoardView } from '@/pages/room/board-view';
-import { emptyBoard, spawn } from '@game-core/game';
-import type { Reply } from '@game-core/protocol';
+import { BoardView } from '@/components/board-view';
+import { emptyBoard, spawn } from '@game/game';
+import type { Reply } from '@game/protocol';
 
 const { connection, directory } = vi.hoisted(() => {
   function createSocket() {

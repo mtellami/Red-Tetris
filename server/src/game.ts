@@ -13,9 +13,9 @@ import {
   pointsFor,
   spawn,
   spectrum,
-} from "#game-core/game";
-import type { Action, FallingPiece, Kind } from "#game-core/game";
-import { MODES } from "#game-core/protocol";
+} from "#game/game";
+import type { Action, FallingPiece, Kind } from "#game/game";
+import { MODES } from "#game/protocol";
 import type {
   Category,
   LeaderboardEntry,
@@ -23,7 +23,7 @@ import type {
   Phase,
   RoundResult,
   Snapshot,
-} from "#game-core/protocol";
+} from "#game/protocol";
 
 export class Piece {
   constructor(readonly kind: Kind) {}

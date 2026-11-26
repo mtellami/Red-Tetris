@@ -5,7 +5,7 @@
     "moduleResolution": "Bundler",
     "paths": {
       "@/*": ["./src/*"],
-      "@game-core/*": ["../game-core/*"]
+      "@game/*": ["../game/*"]
     }
   },
   "include": ["src", "tests", "vite.config.ts"]

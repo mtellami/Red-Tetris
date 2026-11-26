@@ -23,7 +23,7 @@
     "*.config.ts",
     "../tests",
     "../server",
-    "../game-core"
+    "../game"
   ],
   "exclude": [
     "../node_modules",

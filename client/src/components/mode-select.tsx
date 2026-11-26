@@ -1,5 +1,5 @@
-import { MODES } from "@game-core/protocol";
-import type { Mode } from "@game-core/protocol";
+import { MODES } from "@game/protocol";
+import type { Mode } from "@game/protocol";
 import { Choice } from "@/components/choice";
 
 export function ModeSelect<T extends Mode>({

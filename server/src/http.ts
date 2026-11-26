@@ -1,9 +1,7 @@
 import { join } from "node:path";
 import express from "express";
-import { isCategory, isMode } from "#game-core/protocol";
+import { isCategory, isMode } from "#game/protocol";
 import type { Leaderboard } from "./leaderboard.js";
-
-const spaRoute = /^\/(?:(?:leaderboard|rooms)\/?|[^/.]+\/[^/.]+\/?|)?$/;
 
 export function createApp(leaderboard: Leaderboard, clientDir?: string) {
   const app = express();
@@ -16,7 +14,8 @@ export function createApp(leaderboard: Leaderboard, clientDir?: string) {
       .json({ error: "method_not_allowed" });
   });
 
-  app.get("/api/leaderboard", async (req, res) => {
+  const api = express.Router();
+  api.get("/leaderboard", async (req, res) => {
     res.set("Cache-Control", "no-store");
     const mode = req.query.mode ?? "scored";
     const category = req.query.category ?? "solo";
@@ -32,13 +31,18 @@ export function createApp(leaderboard: Leaderboard, clientDir?: string) {
       res.status(503).json({ error: "leaderboard_unavailable" });
     }
   });
-  app.use("/api", (_req, res) => {
+  api.use((_req, res) => {
     res.status(404).json({ error: "not_found" });
   });
+  app.use("/api", api);
 
   if (clientDir) {
     app.use(express.static(clientDir, { index: false, redirect: false }));
-    app.get(spaRoute, (_req, res, next) => {
+    app.use((req, res, next) => {
+      res.vary("Accept");
+      if (!req.accepts().some((type) => type.toLowerCase() === "text/html")) {
+        return next();
+      }
       res.sendFile(join(clientDir, "index.html"), (error) => {
         if (error) next(res.headersSent ? error : undefined);
       });

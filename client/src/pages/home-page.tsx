@@ -2,7 +2,7 @@ import { Alert, Button, Card, Input, Label, TextField } from "@heroui/react";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent, Ref } from "react";
 import { useLocation } from "react-router-dom";
-import { validName, validRoom } from "@game-core/protocol";
+import { validName, validRoom } from "@game/protocol";
 
 function JoinField({
   name,

@@ -9,7 +9,7 @@ export default defineConfig({
   resolve: { tsconfigPaths: true },
   server: {
     proxy: {
-      '/api': api,
+      '^/api(?:[/?]|$)': api,
       '/socket.io': { target: api, ws: true },
     },
   },

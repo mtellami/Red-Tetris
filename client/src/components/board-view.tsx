@@ -1,6 +1,6 @@
 import type { Ref } from "react";
-import { coordinates, WIDTH } from "@game-core/game";
-import type { Board, Cell, FallingPiece } from "@game-core/game";
+import { coordinates, WIDTH } from "@game/game";
+import type { Board, Cell, FallingPiece } from "@game/game";
 
 const cellBackgrounds: Record<NonNullable<Cell>, string> = {
   I: "bg-[#55c9dc]",

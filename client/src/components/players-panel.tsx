@@ -1,6 +1,6 @@
 import { Card } from "@heroui/react";
-import type { Snapshot } from "@game-core/protocol";
-import { PlayerAvatar } from "@/pages/room/player-avatar";
+import type { Snapshot } from "@game/protocol";
+import { PlayerAvatar } from "@/components/player-avatar";
 
 export function PlayersPanel({ snapshot }: { snapshot: Snapshot | null }) {
   const roundActive = snapshot?.phase === "running";
@@ -21,17 +21,26 @@ export function PlayersPanel({ snapshot }: { snapshot: Snapshot | null }) {
                 className="flex items-center justify-between gap-2 border-b border-white/7 py-1.5 wrap-anywhere last:border-b-0"
               >
                 <div className="flex min-w-0 items-center gap-2">
-                  <PlayerAvatar name={player.name} host={player.id === snapshot.hostId} />
+                  <PlayerAvatar
+                    name={player.name}
+                    host={player.id === snapshot.hostId}
+                  />
                   <strong className="min-w-0 text-xs sm:text-sm">
                     {player.name}
-                    {player.id === snapshot.selfId && <span className="font-normal text-muted"> (you)</span>}
+                    {player.id === snapshot.selfId && (
+                      <span className="font-normal text-muted"> (you)</span>
+                    )}
                   </strong>
                 </div>
                 <span className="text-right text-xs text-muted empty:hidden">
                   {player.id === snapshot.hostId && (
-                    <span className="rounded-full bg-accent/12 px-1.5 py-0.5 whitespace-nowrap text-danger">Host</span>
+                    <span className="rounded-full bg-accent/12 px-1.5 py-0.5 whitespace-nowrap text-danger">
+                      Host
+                    </span>
                   )}
-                  {roundActive && !player.alive && <span className="block">Out</span>}
+                  {roundActive && !player.alive && (
+                    <span className="block">Out</span>
+                  )}
                 </span>
               </li>
             ))}
@@ -45,7 +54,9 @@ export function PlayersPanel({ snapshot }: { snapshot: Snapshot | null }) {
             </p>
           )}
           {!roundActive && !isHost && (
-            <p className="mb-0 text-sm text-muted">Waiting for the host to start.</p>
+            <p className="mb-0 text-sm text-muted">
+              Waiting for the host to start.
+            </p>
           )}
         </>
       )}
