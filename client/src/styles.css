@@ -6,6 +6,7 @@
 @import "@heroui/styles/components/alert.css" layer(components);
 @import "@heroui/styles/components/button.css" layer(components);
 @import "@heroui/styles/components/card.css" layer(components);
+@import "@heroui/styles/components/drawer.css" layer(components);
 @import "@heroui/styles/components/input.css" layer(components);
 @import "@heroui/styles/components/kbd.css" layer(components);
 @import "@heroui/styles/components/label.css" layer(components);
@@ -23,12 +24,12 @@
   [data-theme="dark"] {
     --background: #111015;
     --foreground: #f7f4f5;
-    --muted: #b5adb8;
-    --surface: #1b191f;
+    --muted: #a8a6af;
+    --surface: #1b1a20;
     --overlay: #25222b;
     --border: #38333d;
-    --field-background: #131217;
-    --accent: #ff5969;
+    --field-background: #111015;
+    --accent: #ff5366;
     --accent-foreground: #1c1014;
     --danger: #ff9fa9;
     --focus: #ff9ba5;
@@ -61,5 +62,15 @@
 
   p {
     @apply mb-[1em];
+  }
+}
+
+@layer components {
+  .nav-link {
+    @apply text-muted no-underline hover:text-foreground aria-[current=page]:text-foreground;
+  }
+
+  .design-card {
+    @apply rounded-2xl border border-white/7 bg-surface shadow-none sm:rounded-[1.15rem];
   }
 }

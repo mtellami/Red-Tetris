@@ -1,8 +1,9 @@
-import { Kbd } from "@heroui/react";
+import { Button, Kbd } from "@heroui/react";
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { emptyBoard } from "@game-core/game";
+import type { Action } from "@game-core/game";
 import type { RoundResult, Snapshot } from "@game-core/protocol";
 import { BoardView } from "@/pages/room/board-view";
 
@@ -13,6 +14,13 @@ const controls = [
   { action: "Soft drop", keys: ["↓"] },
   { action: "Hard drop", keys: ["Space"] },
 ];
+const touchControls = [
+  { action: "left", label: "Move left", icon: "←" },
+  { action: "softDrop", label: "Soft drop", icon: "↓" },
+  { action: "rotate", label: "Rotate", icon: "↻" },
+  { action: "hardDrop", label: "Hard drop", icon: "⤓" },
+  { action: "right", label: "Move right", icon: "→" },
+] as const;
 
 function BoardNotice({
   title,
@@ -38,7 +46,42 @@ function resultText(result: RoundResult | null): string {
   return "Game over";
 }
 
-export function PlayArea({ snapshot }: { snapshot: Snapshot | null }) {
+function RoundResultNotice({ result, scoreSave }: Pick<Snapshot, "result" | "scoreSave">) {
+  const navigate = useNavigate();
+
+  return (
+    <div className="absolute inset-0 grid place-items-center bg-background/65 p-1 sm:p-3">
+      <div className="w-full max-w-52 rounded-lg border border-border bg-surface px-1 py-2 text-center shadow-lg sm:rounded-xl sm:px-4 sm:py-4">
+        <div role="status" className="grid gap-1">
+          <strong className="text-sm leading-tight font-bold tracking-tight wrap-anywhere sm:text-xl">
+            {resultText(result)}
+          </strong>
+          {scoreSave === "pending" && <span className="text-xs text-muted">Saving scores…</span>}
+          {scoreSave === "failed" && <span className="text-xs text-muted">Scores could not be saved.</span>}
+        </div>
+        {scoreSave === "saved" && (
+          <Button
+            size="sm"
+            className="mt-2 h-auto min-h-8 max-w-full min-w-0 rounded-lg px-1.5 py-1 text-[0.6875rem] leading-tight wrap-anywhere whitespace-normal sm:px-3 sm:text-sm"
+            onPress={() => void navigate("/leaderboard")}
+          >
+            View leaderboard
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function PlayArea({
+  snapshot,
+  canPlay,
+  sendInput,
+}: {
+  snapshot: Snapshot | null;
+  canPlay: boolean;
+  sendInput: (action: Action) => void;
+}) {
   const boardRef = useRef<HTMLDivElement>(null);
   const roundActive = snapshot?.phase === "running";
   const eliminated =
@@ -50,39 +93,45 @@ export function PlayArea({ snapshot }: { snapshot: Snapshot | null }) {
   }, [roundActive]);
 
   return (
-    <div className="col-span-2 col-start-1 row-start-1 grid h-full min-h-0 grid-rows-[minmax(0,1fr)_auto] gap-1 md:col-span-1 md:col-start-2 md:gap-2">
-      <div className="grid min-h-0 place-items-center [container-type:size]">
-        <div className="relative w-[min(100%,50cqh,18rem)] rounded-lg border border-border bg-[#0b0a0e] p-1 sm:p-2">
-          <BoardView
-            board={snapshot?.board ?? blank}
-            piece={snapshot?.piece ?? null}
-            boardRef={boardRef}
-          />
-          {eliminated && (
-            <BoardNotice title="You’re out">
-              <span>Waiting for the round to finish.</span>
-            </BoardNotice>
-          )}
-          {snapshot && !roundActive && (
-            <BoardNotice
-              title={
-                snapshot.phase === "finished"
-                  ? resultText(snapshot.result)
-                  : "Waiting to start"
-              }
-            >
-              {snapshot.scoreSave === "pending" && <span>Saving scores…</span>}
-              {snapshot.scoreSave === "failed" && (
-                <span>Scores could not be saved.</span>
-              )}
-              {snapshot.scoreSave === "saved" && (
-                <Link to="/leaderboard">View leaderboard</Link>
-              )}
-            </BoardNotice>
-          )}
-        </div>
+    <div className="col-start-1 row-start-2 flex h-full min-h-0 min-w-0 flex-col items-center justify-center gap-2 [container-type:size] md:col-start-2 md:row-start-1 md:justify-start">
+      <div className="relative w-[min(100%,calc(50cqh-1.75rem),18rem)] shrink-0 overflow-hidden rounded-lg border border-border bg-[#222026] shadow-[0_0_2.5rem_#ff53661a] md:w-[min(100%,calc(50cqh-1.6rem),18rem)]">
+        <BoardView
+          board={snapshot?.board ?? blank}
+          piece={snapshot?.piece ?? null}
+          boardRef={boardRef}
+        />
+        {eliminated && (
+          <BoardNotice title="You’re out">
+            <span>Waiting for the round to finish.</span>
+          </BoardNotice>
+        )}
+        {snapshot?.phase === "lobby" && (
+          <BoardNotice title="Waiting to start">
+            {snapshot.hostId !== snapshot.selfId && (
+              <span className="text-muted md:hidden">Waiting for the host to start.</span>
+            )}
+          </BoardNotice>
+        )}
+        {snapshot?.phase === "finished" && (
+          <RoundResultNotice result={snapshot.result} scoreSave={snapshot.scoreSave} />
+        )}
       </div>
-      <dl className="flex flex-wrap justify-center gap-2 sm:gap-3">
+      <div role="group" aria-label="Game controls" className="grid w-full max-w-88 shrink-0 grid-cols-5 gap-1.5 md:hidden">
+        {touchControls.map(({ action, label, icon }) => (
+          <Button
+            key={action}
+            isIconOnly
+            variant={action === "hardDrop" ? "primary" : "tertiary"}
+            className="h-11 w-full min-w-0 touch-manipulation rounded-xl text-[1.375rem] leading-none"
+            aria-label={label}
+            isDisabled={!canPlay}
+            onPress={() => sendInput(action)}
+          >
+            <span aria-hidden="true">{icon}</span>
+          </Button>
+        ))}
+      </div>
+      <dl className="hidden shrink-0 justify-center gap-2 text-nowrap md:flex">
         {controls.map(({ action, keys }) => (
           <div className="grid justify-items-center gap-1" key={action}>
             <dt className="flex gap-1">

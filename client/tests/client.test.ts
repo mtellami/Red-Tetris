@@ -8,21 +8,26 @@ import { BoardView } from '@/pages/room/board-view';
 import { emptyBoard, spawn } from '@game-core/game';
 import type { Reply } from '@game-core/protocol';
 
-const connection = vi.hoisted(() => {
-  const handlers = new Map<string, (...args: unknown[]) => unknown>();
-  const socket = {
-    handlers,
-    connected: true,
-    on: vi.fn((name: string, callback: (...args: unknown[]) => unknown) => handlers.set(name, callback)),
-    connect: vi.fn(() => handlers.get('connect')?.()),
-    disconnect: vi.fn(),
-    removeAllListeners: vi.fn(() => handlers.clear()),
-    emit: vi.fn(),
-    timeout: vi.fn(() => socket),
-  };
-  return socket;
+const { connection, directory } = vi.hoisted(() => {
+  function createSocket() {
+    const handlers = new Map<string, (...args: unknown[]) => unknown>();
+    const socket = {
+      handlers,
+      connected: true,
+      on: vi.fn((name: string, callback: (...args: unknown[]) => unknown) => handlers.set(name, callback)),
+      connect: vi.fn(() => handlers.get('connect')?.()),
+      disconnect: vi.fn(),
+      removeAllListeners: vi.fn(() => handlers.clear()),
+      emit: vi.fn(),
+      timeout: vi.fn(() => socket),
+    };
+    return socket;
+  }
+  return { connection: createSocket(), directory: createSocket() };
 });
-vi.mock('socket.io-client', () => ({ io: () => connection }));
+vi.mock('socket.io-client', () => ({
+  io: (options: { timeout?: number }) => options.timeout === undefined ? directory : connection,
+}));
 
 afterEach(() => {
   cleanup();
@@ -58,11 +63,13 @@ it('loads and switches leaderboard filters', async () => {
       ? new Response('[]') : new Response(JSON.stringify([{ name: 'Ada', score: 100, completedAt: '2026-02-01' }])),
   );
   try {
-    renderRoute('/leaderboard');
-    expect(await screen.findByText('Ada')).toBeTruthy();
-    fireEvent.keyDown(screen.getByRole('button', { name: /Players/ }), { key: 'ArrowDown' });
-    fireEvent.click(await screen.findByRole('option', { name: 'Multiplayer' }));
+    const { container } = renderRoute('/leaderboard');
+    expect(await screen.findByRole('rowheader', { name: 'Ada' })).toBeTruthy();
+    expect(screen.getByRole('columnheader', { name: 'Score' })).toBeTruthy();
+    expect(container.querySelector('table')).toBeNull();
+    fireEvent.click(screen.getByRole('radio', { name: 'Multiplayer' }));
     expect(await screen.findByText('No scores yet.')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Play a game' }).getAttribute('href')).toBe('/');
     expect(fetch).toHaveBeenCalledWith('/api/leaderboard?mode=scored&category=multiplayer', expect.any(Object));
   } finally {
     fetch.mockRestore();

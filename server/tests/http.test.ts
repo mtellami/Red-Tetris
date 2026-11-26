@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import type { Server } from 'node:http';
 import { tmpdir } from 'node:os';
@@ -51,6 +51,25 @@ it('serializes concurrent writes, keeps the top ten, and loads the saved ranks t
   expect(await reloaded.list('fast', 'solo')).toEqual([]);
 });
 
+it('omits zero-point scores already on disk and skips new zero-point scores', async () => {
+  const file = join(directory, 'scores.json');
+  const leaderboard = new Leaderboard(file);
+  const completedAt = '2026-02-01T00:00:00.000Z';
+  const legacy = { name: 'Ada', score: 0, completedAt };
+  const zero = { name: 'Ben', score: 0, completedAt };
+  const positive = { name: 'Cleo', score: 100, completedAt };
+  const seeded = JSON.stringify({ 'scored:solo': [legacy] });
+  await writeFile(file, seeded);
+
+  expect(await leaderboard.list('scored', 'solo')).toEqual([]);
+  await leaderboard.save('scored', 'solo', [zero]);
+  expect(await readFile(file, 'utf8')).toBe(seeded);
+
+  await leaderboard.save('scored', 'solo', [zero, positive]);
+  expect(await leaderboard.list('scored', 'solo')).toEqual([positive]);
+  expect(JSON.parse(await readFile(file, 'utf8'))).toEqual({ 'scored:solo': [positive] });
+});
+
 it('serves the deep-linked SPA, assets and leaderboard API with meaningful errors', async () => {
   const file = join(directory, 'scores.json');
   const site = join(directory, 'client');
@@ -67,6 +86,9 @@ it('serves the deep-linked SPA, assets and leaderboard API with meaningful error
   expect(await (await get('/Friday%20Game/Ada')).text()).toContain('/bundle.js');
   expect((await get('/assets/Ada')).status).toBe(200);
   expect((await get('/leaderboard')).status).toBe(200);
+  expect((await get('/rooms')).status).toBe(200);
+  expect((await get('/rooms/')).status).toBe(200);
+  expect((await get('/rooms/Ada')).status).toBe(200);
   expect((await get('/bundle.js', { method: 'HEAD' })).headers.get('content-type')).toContain('javascript');
   expect((await get('/assets/missing.css')).status).toBe(404);
   expect((await get('/missing.js')).status).toBe(404);

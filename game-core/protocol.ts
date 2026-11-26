@@ -31,6 +31,7 @@ export interface Snapshot {
   phase: Phase;
   roundId: number;
   mode: Mode;
+  selectedMode: Mode;
   category: Category;
   hostId: string;
   selfId: string;
@@ -49,11 +50,18 @@ export interface LeaderboardEntry {
   completedAt: string;
 }
 
+export interface OpenRoom {
+  room: string;
+  playerCount: number;
+  mode: Mode;
+}
+
 export type ErrorCode =
   | "invalid_payload"
   | "already_joined"
   | "name_taken"
   | "round_running"
+  | "room_unavailable"
   | "not_joined"
   | "not_host"
   | "inactive"
@@ -62,8 +70,10 @@ export type Reply = { ok: true } | { ok: false; error: ErrorCode };
 export type Ack = (reply: Reply) => void;
 
 export interface ClientEvents {
-  "room:join": (request: { room: string; name: string }, ack: Ack) => void;
-  "round:start": (request: { mode: Mode; roundId: number }, ack: Ack) => void;
+  "rooms:watch": () => void;
+  "room:join": (request: { room: string; name: string; lobbyOnly?: boolean }, ack: Ack) => void;
+  "round:select-mode": (request: { mode: Mode; roundId: number }, ack: Ack) => void;
+  "round:start": (request: { mode?: Mode; roundId: number }, ack: Ack) => void;
   "player:input": (
     request: { action: Action; roundId: number },
     ack?: Ack,
@@ -71,5 +81,6 @@ export interface ClientEvents {
 }
 
 export interface ServerEvents {
+  "rooms:open": (rooms: OpenRoom[]) => void;
   "room:snapshot": (snapshot: Snapshot) => void;
 }

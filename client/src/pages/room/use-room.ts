@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from 'react';
+import { useCallback, useEffect, useEffectEvent, useReducer } from 'react';
 import { io } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 import type { Action } from '@game-core/game';
@@ -14,6 +14,7 @@ const errors: Record<ErrorCode, string> = {
   already_joined: 'This connection is already in a room.',
   name_taken: 'That player name is already in use in this room.',
   round_running: 'A round is in progress. Try joining after it finishes.',
+  room_unavailable: 'This room is no longer open. Choose another room or enter a room name.',
   not_joined: 'Join a room first.',
   not_host: 'Only the host can start a round.',
   inactive: 'Your board is inactive.',
@@ -60,8 +61,9 @@ export function reduceRoom(state: RoomState, event: Event): RoomState {
   }
 }
 
-export function useRoom(room?: string, name?: string) {
+export function useRoom(room?: string, name?: string, lobbyOnly?: boolean) {
   const [state, dispatch] = useReducer(reduceRoom, initial);
+  const requiresOpenLobby = useEffectEvent(() => lobbyOnly);
 
   useEffect(() => {
     if (!room || !name) {
@@ -72,7 +74,8 @@ export function useRoom(room?: string, name?: string) {
     let joined = false;
     const join = () => {
       dispatch({ type: 'connect' });
-      socket.timeout(5000).emit('room:join', { room, name }, (error, reply) => {
+      const request = !joined && requiresOpenLobby() ? { room, name, lobbyOnly: true } : { room, name };
+      socket.timeout(5000).emit('room:join', request, (error, reply) => {
         if (!socket.connected) return;
         if (error) dispatch({ type: 'rejected', message: 'The room did not respond. Try again.' });
         else if (!reply.ok) dispatch({ type: 'rejected', message: errors[reply.error], code: reply.error });
@@ -105,9 +108,13 @@ export function useRoom(room?: string, name?: string) {
   const roundId = snapshot?.roundId;
   const canPlay = connected && snapshot?.phase === 'running'
     && snapshot.roster.some(({ id, alive }) => id === snapshot.selfId && alive);
+  const sendInput = useCallback((action: Action) => {
+    if (!socket?.connected || !canPlay || roundId === undefined) return;
+    socket.emit('player:input', { action, roundId });
+  }, [socket, canPlay, roundId]);
 
   useEffect(() => {
-    if (!socket || !canPlay || roundId === undefined) return;
+    if (!canPlay) return;
     const keydown = (event: KeyboardEvent) => {
       if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
       const action = actions[event.key];
@@ -115,23 +122,32 @@ export function useRoom(room?: string, name?: string) {
       if (event.target instanceof HTMLElement
         && (event.target.matches('input, textarea, select, button, a') || event.target.isContentEditable)) return;
       event.preventDefault();
-      if (!socket.connected || (event.repeat && (action === 'hardDrop' || action === 'rotate'))) return;
-      socket.emit('player:input', { action, roundId });
+      if (event.repeat && (action === 'hardDrop' || action === 'rotate')) return;
+      sendInput(action);
     };
     window.addEventListener('keydown', keydown);
     return () => window.removeEventListener('keydown', keydown);
-  }, [socket, canPlay, roundId]);
+  }, [canPlay, sendInput]);
 
-  const start = (mode: Mode) => {
+  const selectMode = (mode: Mode) => {
     if (!socket?.connected || !snapshot) return;
-    socket.timeout(5000).emit('round:start', { mode, roundId: snapshot.roundId }, (error, reply) => {
+    socket.timeout(5000).emit('round:select-mode', { mode, roundId: snapshot.roundId }, (error, reply) => {
+      if (!socket.connected) return;
+      if (error) dispatch({ type: 'error', message: 'The server did not confirm the mode selection.' });
+      else if (!reply.ok) dispatch({ type: 'error', message: errors[reply.error] });
+    });
+  };
+
+  const start = () => {
+    if (!socket?.connected || !snapshot) return;
+    socket.timeout(5000).emit('round:start', { roundId: snapshot.roundId }, (error, reply) => {
       if (!socket.connected) return;
       if (error) dispatch({ type: 'error', message: 'The server did not confirm the start request.' });
       else if (!reply.ok) dispatch({ type: 'error', message: errors[reply.error] });
     });
   };
 
-  return { snapshot, connected, join, message, start };
+  return { snapshot, connected, join, message, selectMode, start, canPlay, sendInput };
 }
 
 export type RoomSession = ReturnType<typeof useRoom>;

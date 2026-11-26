@@ -1,31 +1,25 @@
 import { Card, Toast } from "@heroui/react";
 import { useEffect, useState } from "react";
-import { Link, Route, Routes, useMatch, useNavigate } from "react-router-dom";
+import { Link, NavLink, Route, Routes, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { validName, validRoom } from "@game-core/protocol";
+import brandMark from "@/assets/red-tetris-mark.png";
 import { HomePage } from "@/pages/home-page";
 import { LeaderboardPage } from "@/pages/leaderboard-page";
+import { OpenRooms } from "@/pages/open-rooms";
 import { RoomPage } from "@/pages/room/room-page";
 import { useRoom } from "@/pages/room/use-room";
 
 const pageWidth = "mx-auto w-[min(100%_-_2rem,72rem)]";
-type RoomEntry = { room: string; name: string };
+type RoomEntry = { room: string; name: string; lobbyOnly?: boolean };
 
 function Brand() {
   return (
     <Link
-      className="inline-flex items-center gap-3 font-[850] tracking-[0.08em] no-underline"
+      className="inline-flex shrink-0 items-center gap-2 text-xs font-bold tracking-[0.12em] whitespace-nowrap no-underline sm:gap-3 sm:text-sm"
       to="/"
       aria-label="Red Tetris home"
     >
-      <span
-        className="grid grid-cols-[repeat(3,0.37rem)] auto-rows-[0.37rem] gap-[0.1rem] text-accent *:rounded-[1px] *:bg-current"
-        aria-hidden="true"
-      >
-        <i className="col-start-2" />
-        <i className="col-start-1" />
-        <i />
-        <i />
-      </span>
+      <img src={brandMark} className="w-6" alt="" />
       RED TETRIS
     </Link>
   );
@@ -33,17 +27,19 @@ function Brand() {
 
 export function App() {
   const navigate = useNavigate();
+  const location = useLocation();
   const atHome = Boolean(useMatch("/"));
   const roomRoute = useMatch("/:room/:playerName");
   const { room, playerName } = roomRoute?.params ?? {};
   const [pendingEntry, setPendingEntry] = useState<RoomEntry | null>(null);
   const [joinError, setJoinError] = useState("");
+  const [playerNameDraft, setPlayerNameDraft] = useState("");
   const entry = atHome
     ? pendingEntry
     : validRoom(room) && validName(playerName)
       ? { room, name: playerName }
       : null;
-  const session = useRoom(entry?.room, entry?.name);
+  const session = useRoom(entry?.room, entry?.name, entry?.lobbyOnly);
 
   useEffect(() => {
     if (!atHome) {
@@ -51,6 +47,7 @@ export function App() {
       setJoinError("");
     } else if (pendingEntry) {
       if (session.join.status === "joined") {
+        setPlayerNameDraft("");
         void navigate(
           "/" + encodeURIComponent(pendingEntry.room) +
           "/" + encodeURIComponent(pendingEntry.name),
@@ -68,16 +65,14 @@ export function App() {
       <header className="border-b border-border">
         <div
           className={
-            pageWidth + " flex min-h-12 items-center justify-between gap-4 sm:min-h-14"
+            "mx-auto flex min-h-12 w-full max-w-[90rem] items-center justify-between gap-3 px-4 sm:min-h-14 sm:px-9"
           }
         >
           <Brand />
-          <Link
-            className="text-[0.9rem] text-muted hover:text-white"
-            to="/leaderboard"
-          >
-            Leaderboard
-          </Link>
+          <nav aria-label="Main" className="flex items-center gap-3 text-sm sm:gap-6">
+            <NavLink className="nav-link" to="/rooms" end>Rooms</NavLink>
+            <NavLink className="nav-link" to="/leaderboard">Leaderboard</NavLink>
+          </nav>
         </div>
       </header>
       <main className={pageWidth + " min-h-0 flex-1 overflow-auto py-3 sm:py-4"}>
@@ -86,15 +81,20 @@ export function App() {
             path="/"
             element={
               <HomePage
+                key={location.key}
                 isJoining={pendingEntry !== null}
                 joinError={joinError}
-                onJoin={(room, name) => {
+                playerNameDraft={playerNameDraft}
+                onPlayerNameChange={setPlayerNameDraft}
+                onRoomChange={() => setJoinError("")}
+                onJoin={(room, name, lobbyOnly) => {
                   setJoinError("");
-                  setPendingEntry({ room, name });
+                  setPendingEntry({ room, name, lobbyOnly });
                 }}
               />
             }
           />
+          <Route path="/rooms" element={<OpenRooms />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route
             path="/:room/:playerName"

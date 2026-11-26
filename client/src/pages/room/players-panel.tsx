@@ -1,29 +1,14 @@
-import { Button, Card } from "@heroui/react";
-import { useState } from "react";
-import { MODES } from "@game-core/protocol";
-import type { Mode, Snapshot } from "@game-core/protocol";
-import { ModeSelect } from "@/components/mode-select";
+import { Card } from "@heroui/react";
+import type { Snapshot } from "@game-core/protocol";
+import { PlayerAvatar } from "@/pages/room/player-avatar";
 
-const roomModes = Object.keys(MODES) as Mode[];
-
-export function PlayersPanel({
-  room,
-  snapshot,
-  start,
-}: {
-  room: string;
-  snapshot: Snapshot | null;
-  start: (mode: Mode) => void;
-}) {
-  const [mode, setMode] = useState<Mode>("classic");
+export function PlayersPanel({ snapshot }: { snapshot: Snapshot | null }) {
   const roundActive = snapshot?.phase === "running";
   const isHost = snapshot?.hostId === snapshot?.selfId;
-  const inviteUrl =
-    window.location.origin + "/" + encodeURIComponent(room) + "/";
 
   return (
     <Card<"aside">
-      className="col-start-1 row-start-2 max-h-full min-w-0 gap-1.5 overflow-auto p-2 md:row-start-1 md:gap-3 md:p-4"
+      className="design-card min-w-0 gap-1.5 p-2 md:gap-3 md:p-4"
       render={(props) => <aside {...props} />}
     >
       <h2 className="mb-0 shrink-0">Players</h2>
@@ -33,19 +18,20 @@ export function PlayersPanel({
             {snapshot.roster.map((player) => (
               <li
                 key={player.id}
-                className="flex items-center justify-between gap-2 border-b border-border py-1 wrap-anywhere md:py-2"
+                className="flex items-center justify-between gap-2 border-b border-white/7 py-1.5 wrap-anywhere last:border-b-0"
               >
-                <strong>
-                  {player.name}
-                  {player.id === snapshot.selfId ? " (you)" : ""}
-                </strong>
-                <span className="text-muted">
-                  {[
-                    player.id === snapshot.hostId && "Host",
-                    roundActive && !player.alive && "Out",
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
+                <div className="flex min-w-0 items-center gap-2">
+                  <PlayerAvatar name={player.name} host={player.id === snapshot.hostId} />
+                  <strong className="min-w-0 text-xs sm:text-sm">
+                    {player.name}
+                    {player.id === snapshot.selfId && <span className="font-normal text-muted"> (you)</span>}
+                  </strong>
+                </div>
+                <span className="text-right text-xs text-muted empty:hidden">
+                  {player.id === snapshot.hostId && (
+                    <span className="rounded-full bg-accent/12 px-1.5 py-0.5 whitespace-nowrap text-danger">Host</span>
+                  )}
+                  {roundActive && !player.alive && <span className="block">Out</span>}
                 </span>
               </li>
             ))}
@@ -58,41 +44,11 @@ export function PlayersPanel({
               </strong>
             </p>
           )}
-          {!roundActive && isHost && (
-            <div className="grid shrink-0 gap-1.5 md:gap-3">
-              <ModeSelect
-                modes={roomModes}
-                value={mode}
-                onChange={setMode}
-              />
-              <Button className="w-full" onPress={() => start(mode)}>
-                {snapshot.phase === "finished"
-                  ? "Start next round"
-                  : "Start round"}
-              </Button>
-            </div>
-          )}
           {!roundActive && !isHost && (
             <p className="mb-0 text-sm text-muted">Waiting for the host to start.</p>
           )}
-          {roundActive && (
-            <p className="mb-0 text-sm text-muted">
-              {MODES[snapshot.mode].label} ·{" "}
-              {snapshot.category === "solo" ? "Solo" : "Multiplayer"}
-            </p>
-          )}
         </>
       )}
-      <details className="min-h-5 overflow-y-auto">
-        <summary className="cursor-pointer text-[0.875rem] text-muted">
-          How to invite someone
-        </summary>
-        <p className="mt-[0.65rem] mb-0 text-sm text-muted">
-          Tell them to enter <strong>{room}</strong> and their own player name
-          on the home page. They can also add their name after{" "}
-          <span className="wrap-anywhere">{inviteUrl}</span>
-        </p>
-      </details>
     </Card>
   );
 }

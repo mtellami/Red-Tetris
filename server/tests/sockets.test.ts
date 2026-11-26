@@ -4,7 +4,7 @@ import { io as connect } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 import { afterEach, beforeEach, expect, it } from 'vitest';
 import { attachRooms } from '../src/sockets.js';
-import type { ClientEvents, ServerEvents, Snapshot } from '#game-core/protocol';
+import type { ClientEvents, Mode, OpenRoom, ServerEvents, Snapshot } from '#game-core/protocol';
 
 const httpClients: Socket<ServerEvents, ClientEvents>[] = [];
 let server: Server<ClientEvents, ServerEvents>;
@@ -42,8 +42,10 @@ async function client() {
   return {
     socket,
     get snapshot() { return latest; },
-    join: (room: string, name: string) => socket.timeout(1500).emitWithAck('room:join', { room, name }),
-    start: (roundId: number) => socket.timeout(1500).emitWithAck('round:start', { roundId, mode: 'classic' }),
+    join: (room: string, name: string, lobbyOnly?: boolean) =>
+      socket.timeout(1500).emitWithAck('room:join', { room, name, lobbyOnly }),
+    selectMode: (mode: Mode, roundId: number) => socket.timeout(1500).emitWithAck('round:select-mode', { mode, roundId }),
+    start: (roundId: number, mode?: Mode) => socket.timeout(1500).emitWithAck('round:start', { roundId, mode }),
     drop: (roundId: number) => socket.timeout(1500).emitWithAck('player:input', { action: 'hardDrop', roundId }),
   };
 }
@@ -55,7 +57,7 @@ it('isolates rooms, synchronizes pieces across different play speeds, and transf
   expect(await other.join('elsewhere', 'Cleo')).toEqual({ ok: true });
   expect(await late.join('arcade', 'Ben')).toEqual({ ok: false, error: 'name_taken' });
   expect(await two.start(0)).toEqual({ ok: false, error: 'not_host' });
-  expect(await one.start(0)).toEqual({ ok: true });
+  expect(await one.start(0, 'classic')).toEqual({ ok: true });
   await expect.poll(() => two.snapshot?.piece).toEqual(one.snapshot?.piece);
   expect(other.snapshot?.phase).toBe('lobby');
   expect(await late.join('arcade', 'Dee')).toEqual({ ok: false, error: 'round_running' });
@@ -80,6 +82,48 @@ it('isolates rooms, synchronizes pieces across different play speeds, and transf
   late.socket.disconnect();
   two.socket.disconnect();
   await expect.poll(() => rooms.has('arcade')).toBe(false);
+});
+
+it('lists waiting rooms and rejects stale directory joins', async () => {
+  const [host, other, guest, watcher] = await Promise.all([client(), client(), client(), client()]);
+  await host.join('Zeta Arcade', 'Ada');
+  let open: OpenRoom[] | undefined;
+  watcher.socket.on('rooms:open', (rooms) => { open = rooms; });
+  watcher.socket.emit('rooms:watch');
+  await expect.poll(() => open).toEqual([{ room: 'Zeta Arcade', playerCount: 1, mode: 'classic' }]);
+
+  await other.join('Alpha Arcade', 'Cleo');
+  await guest.join('Zeta Arcade', 'Ben', true);
+  await expect.poll(() => open).toEqual([
+    { room: 'Alpha Arcade', playerCount: 1, mode: 'classic' },
+    { room: 'Zeta Arcade', playerCount: 2, mode: 'classic' },
+  ]);
+
+  expect(await guest.selectMode('fast', 0)).toEqual({ ok: false, error: 'not_host' });
+  expect(await host.selectMode('fast', 1)).toEqual({ ok: false, error: 'stale_round' });
+  expect(await host.selectMode('fast', 0)).toEqual({ ok: true });
+  await expect.poll(() => guest.snapshot).toMatchObject({ phase: 'lobby', selectedMode: 'fast' });
+  await expect.poll(() => open).toEqual([
+    { room: 'Alpha Arcade', playerCount: 1, mode: 'classic' },
+    { room: 'Zeta Arcade', playerCount: 2, mode: 'fast' },
+  ]);
+  await host.start(0);
+  await expect.poll(() => guest.snapshot).toMatchObject({ phase: 'running', mode: 'fast' });
+  expect(await host.selectMode('scored', 1)).toEqual({ ok: false, error: 'round_running' });
+  await expect.poll(() => open).toEqual([{ room: 'Alpha Arcade', playerCount: 1, mode: 'classic' }]);
+  expect(await watcher.join('Zeta Arcade', 'Dee', true)).toEqual({ ok: false, error: 'round_running' });
+  other.socket.disconnect();
+  await expect.poll(() => open).toEqual([]);
+  expect(await watcher.join('Alpha Arcade', 'Dee', true)).toEqual({ ok: false, error: 'room_unavailable' });
+  expect(rooms.has('Alpha Arcade')).toBe(false);
+
+  host.socket.disconnect();
+  await expect.poll(() => guest.snapshot?.phase).toBe('finished');
+  expect(await guest.selectMode('invisible', 1)).toEqual({ ok: true });
+  expect(guest.snapshot).toMatchObject({ phase: 'finished', mode: 'fast', selectedMode: 'invisible' });
+  expect(open).toEqual([]);
+  expect(await watcher.join('Zeta Arcade', 'Dee', true)).toEqual({ ok: false, error: 'room_unavailable' });
+  expect(await watcher.join('Zeta Arcade', 'Dee')).toEqual({ ok: true });
 });
 
 it('rejects bad payloads and runs a one-player Classic round to top-out', async () => {

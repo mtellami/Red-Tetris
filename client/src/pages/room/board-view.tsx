@@ -6,10 +6,10 @@ const cellBackgrounds: Record<NonNullable<Cell>, string> = {
   I: "bg-[#55c9dc]",
   J: "bg-[#657afd]",
   L: "bg-[#f6a04b]",
-  O: "bg-[#edcd5a]",
+  O: "bg-[#f6c84f]",
   S: "bg-[#60cd88]",
   T: "bg-[#bb89ff]",
-  Z: "bg-[#fa6473]",
+  Z: "bg-accent",
   penalty:
     "bg-[repeating-linear-gradient(135deg,#74717d_0_3px,#5a5762_3px_6px)]",
 };

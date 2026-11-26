@@ -3,7 +3,7 @@ import express from "express";
 import { isCategory, isMode } from "#game-core/protocol";
 import type { Leaderboard } from "./leaderboard.js";
 
-const spaRoute = /^\/(?:leaderboard\/?|[^/.]+\/[^/.]+\/?|)?$/;
+const spaRoute = /^\/(?:(?:leaderboard|rooms)\/?|[^/.]+\/[^/.]+\/?|)?$/;
 
 export function createApp(leaderboard: Leaderboard, clientDir?: string) {
   const app = express();

@@ -76,6 +76,7 @@ export class Game {
   phase: Phase = "lobby";
   roundId = 0;
   mode: Mode = "classic";
+  selectedMode: Mode = "classic";
   category: Category = "solo";
   result: RoundResult | null = null;
   scoreSave: Snapshot["scoreSave"] = null;
@@ -105,8 +106,14 @@ export class Game {
     }
   }
 
+  selectMode(mode: Mode) {
+    this.selectedMode = mode;
+    this.services.publish(this);
+  }
+
   start(mode: Mode) {
     this.mode = mode;
+    this.selectedMode = mode;
     this.roundId += 1;
     this.phase = "running";
     this.category = this.players.size === 1 ? "solo" : "multiplayer";
@@ -158,6 +165,7 @@ export class Game {
       phase: this.phase,
       roundId: this.roundId,
       mode: this.mode,
+      selectedMode: this.selectedMode,
       category: this.category,
       hostId: this.hostId,
       selfId: player.id,

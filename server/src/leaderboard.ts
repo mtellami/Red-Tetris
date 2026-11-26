@@ -11,6 +11,8 @@ type Rankings = Partial<
   Record<`${ScoredMode}:${Category}`, LeaderboardEntry[]>
 >;
 
+const hasPoints = ({ score }: LeaderboardEntry) => score > 0;
+
 export class Leaderboard {
   private pending = Promise.resolve();
 
@@ -18,14 +20,18 @@ export class Leaderboard {
 
   async list(mode: ScoredMode, category: Category) {
     await this.pending;
-    return (await this.read())[`${mode}:${category}`] ?? [];
+    return ((await this.read())[`${mode}:${category}`] ?? []).filter(hasPoints);
   }
 
   save(mode: ScoredMode, category: Category, scores: LeaderboardEntry[]) {
+    const rankedScores = scores.filter(hasPoints);
+    if (rankedScores.length === 0) return this.pending;
+
     const write = this.pending.then(async () => {
       const rankings = await this.read();
       const key = `${mode}:${category}` as const;
-      rankings[key] = [...(rankings[key] ?? []), ...scores]
+      const previousScores = (rankings[key] ?? []).filter(hasPoints);
+      rankings[key] = [...previousScores, ...rankedScores]
         .sort(
           (a, b) =>
             b.score - a.score || a.completedAt.localeCompare(b.completedAt),
