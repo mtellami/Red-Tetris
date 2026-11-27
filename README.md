@@ -4,9 +4,9 @@ A networked falling-block puzzle for solo and multiplayer play.
 
 ## Design
 
-[![Red Tetris design](https://img.shields.io/badge/Red_Tetris_design-open-ff5366?style=for-the-badge)](design/Red%20Tetris.figcraft)
+[![Red Tetris design](https://img.shields.io/badge/Red_Tetris_design-open-ff5366?style=for-the-badge)](design/Red%20Tetris%20Preview.pdf)
 
-The editable FigCraft prototype covers 11 desktop and mobile screens, including room entry, multiplayer matches, and the leaderboard. [View the PDF preview](design/Red%20Tetris%20Preview.pdf).
+The design covers 11 desktop and mobile screens, including room entry, multiplayer matches, and the leaderboard. [Open the editable FigCraft file](design/Red%20Tetris.figcraft).
 
 ## Run with Docker Compose
 
